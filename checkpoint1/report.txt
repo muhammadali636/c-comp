@@ -1,14 +1,17 @@
 first figure out is this suppose to be a pdf or something idk.
 Paste your stuff in here so we can do the report later.
 
-Muhammad (phase 1)
+
+Tameem PHASE 3 (phase 3 - AST + Error Recovery + Reporting)
 - What was done
 - Design decisions
 - Lessons learned
 - Assumptions/limitations + improvement ideas
 - Anything interesting u want to say?
 
-Richard (phase 2)
+-----------------------------------------------------------------------------------
+
+Richard PHASE 2 (Scanner + Baseline Parser)
 
 - What was done
 - Design decisions
@@ -16,9 +19,38 @@ Richard (phase 2)
 - Assumptions/limitations + improvement ideas
 - Anything interesting u want to say?
 
-Tameem (phase 3)
-- What was done
-- Design decisions
-- Lessons learned
-- Assumptions/limitations + improvement ideas
-- Anything interesting u want to say?
+----------------------------------------------------------------------------------------
+Muhammad (PHASE 1  Build System + Project Skeleton + Tests/Deliverables)
+What was done
+- Set up the project folder structure (absyn/, tests/) and the main Java files needed to run CM.
+- Write the Makefile to match the assignment:
+  - "make" compiles the required components to produce CM.
+  - "make clean" removes generated files and class files for a clean rebuild.
+- Implement the required "-a" option in CM.java:
+  - "-a" prints the abstract syntax tree after parsing finishes.
+  - The Phase 1 AST output is minimal; Phase 3 replaces it with the full C- AST and full tree printer.
+- Add five required test programs (1.cm to 5.cm) with comment headers:
+  - 1.cm has no errors.
+  - 2.cm to 4.cm each has different lexical/syntactic errors (no more than 3 per file).
+  - 5.cm has many errors to stress error recovery.
+- Write README build/run/packaging steps and create a report template with the required headings.
+- Test Phase 1 build and run commands on the school Linux server (linux.socs.uoguelph.ca).
+
+Design decisions
+- Keep the Makefile simple and similar to course examples so it runs easily on the school server.
+- Keep file names and outputs consistent so Phase 2 and Phase 3 can plug in the real scanner/parser without changing build/run commands.
+- Include placeholder absyn/ and ShowTreeVisitor so the project is organized now; Phase 3 replaces them using the “6-SyntaxTrees” structure.
+
+Lessons learned
+- A working build setup early makes it easier to add JFlex and CUP later.
+- Adding the "-a" option early makes it easier to test AST printing as soon as the parser returns a real tree.
+- Test files must be designed carefully so 2.cm to 4.cm stay within the 3-error limit.
+
+Limitations + improvement ideas
+- Limitation: scanner, parser, full AST, and error recovery are not finished in Phase 1; Phase 1 mainly sets up structure, build rules, run interface, and tests.
+- Improvements:
+  - In Phase 2/3, report lexical and syntactic errors to stderr with line and column numbers and a clear message.
+  - After Phase 2/3, add a "make test" target to run tests/1.cm to tests/5.cm automatically.
+
+Anything interesting to say?
+- Phase 1 focuses on meeting the required setup: Makefile targets, CM driver with "-a", and compliant test programs with clear headers, so Phase 2/3 can focus on scanner tokens, parser + AST, and error recovery.

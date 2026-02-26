@@ -2,6 +2,93 @@
 
 this was 100% written by AI to help organize and will NOT be submitted.
 
+RICHARD:
+PHASE 2 — Scanner + Baseline Parser (No AST code first) (Owner: Richard)
+
+A) JFlex Scanner (Must use JFlex)
+- Implement major token types:
+  - keywords, symbols/operators, whitespace, identifiers, numbers, comments
+  - invalid characters (lexical errors)
+- Track row/column numbers for error reporting
+- Produce tokens compatible with CUP (sym.*), including token values
+
+B) CUP Grammar: Baseline Parse Only (No embedded actions first)
+- Implement a simplified grammar that uses CUP precedence/associativity directives
+  - simplify the provided C- grammar that used layering/associativity techniques
+- Connect parser to scanner
+- Goal: parse valid inputs successfully without AST output yet
+
+C) Verification on Valid Programs
+- Confirm the scanner+parser pipeline can parse known valid programs
+  - include course-provided or sample C- programs used for evaluation when available
+
+- Replace **`CM.flex`** with the real C- scanner using **JFlex**
+  - Implement major token types: keywords, identifiers, numbers, operators, separators, whitespace, comments
+  - Track row/column (use `%line` and `%column`)
+  - Report lexical errors (invalid characters) in a consistent way
+- Replace **`CM.cup`** with a real C- grammar using **CUP**
+  - Simplify grammar to use CUP precedence/associativity directives (instead of layered grammar tricks)
+  - Connect the parser to the JFlex lexer (`Lexer`)
+  - First milestone: parse valid programs successfully **without needing AST actions yet**
+
+Deliverable for Phase 2:
+- Real `CM.flex` and `CM.cup` that build cleanly with `make` and can parse valid inputs.
+
+TAMEEM: 
+PHASE 3 — AST Construction + Error Recovery + Reporting + Polish (Owner: Tameem)
+
+A) AST Generation + -a Output
+- Add embedded CUP actions to build AST nodes
+- Implement AST node classes/structure based on recommended C- syntax tree approach
+- Ensure AST is printed only after it is completely built
+- Print a clear hierarchical representation
+
+B) Error Recovery (Must report multiple errors in one run)
+- Basic reporting:
+  - report the first error token with type/value/row (and column if available)
+- Major recovery components:
+  - recover inside declaration sequences
+  - recover inside statement sequences
+  - recover inside expressions with multiple binary operations
+- Extensive recovery:
+  - extend recovery to additional syntactic structures (if/while/blocks/etc.)
+- Ensure recovery allows continuing parsing to find additional errors
+
+C) Consistent stderr Error Format
+- Standardize error messages to include:
+  - line number + column number
+  - brief explanation
+  - found token (type/value)
+
+- Expand `absyn/` into a real AST class hierarchy (based on lecture “6-SyntaxTrees”)
+- Update CUP actions in `CM.cup` to build AST nodes and return a valid AST root
+- Implement a real `ShowTreeVisitor` that prints a clear hierarchical tree
+- Implement error recovery in CUP so the parser can report **multiple** syntax errors in one run
+  - Ensure errors go to stderr with line/column and a meaningful message
+
+Deliverable for Phase 3:
+- `java CM -a <file>` prints a complete AST for valid programs
+- `2.cm`–`5.cm` produce multiple errors where expected without stopping at the first failure
+
+
+EVERYONE:
+REPORT (Documentation) — Required Contributions from Everyone (All Members)
+For Phase 1, Phase 2, and Phase 3, everyone must contribute point-form notes under these headings:
+- What was done
+- Design decisions
+- Lessons learned
+- Assumptions/limitations + improvement ideas
+
+Everyone help edit and review the report. 
+
+
+
+
+
+
+DONE: 
+
+
 MUHAMMAD:
 PHASE 1 — Build System + Project Skeleton + Tests/Deliverables (Owner: Muhammad)
 
@@ -54,59 +141,3 @@ E) Packaging + Submission Readiness
 - Document the tar/gzip submission command (example):
   - tar -czf checkpoint1.tgz <all required files>
 
-RICHARD:
-PHASE 2 — Scanner + Baseline Parser (No AST code first) (Owner: Richard)
-
-A) JFlex Scanner (Must use JFlex)
-- Implement major token types:
-  - keywords, symbols/operators, whitespace, identifiers, numbers, comments
-  - invalid characters (lexical errors)
-- Track row/column numbers for error reporting
-- Produce tokens compatible with CUP (sym.*), including token values
-
-B) CUP Grammar: Baseline Parse Only (No embedded actions first)
-- Implement a simplified grammar that uses CUP precedence/associativity directives
-  - simplify the provided C- grammar that used layering/associativity techniques
-- Connect parser to scanner
-- Goal: parse valid inputs successfully without AST output yet
-
-C) Verification on Valid Programs
-- Confirm the scanner+parser pipeline can parse known valid programs
-  - include course-provided or sample C- programs used for evaluation when available
-
-TAMEEM: 
-PHASE 3 — AST Construction + Error Recovery + Reporting + Polish (Owner: Tameem)
-
-A) AST Generation + -a Output
-- Add embedded CUP actions to build AST nodes
-- Implement AST node classes/structure based on recommended C- syntax tree approach
-- Ensure AST is printed only after it is completely built
-- Print a clear hierarchical representation
-
-B) Error Recovery (Must report multiple errors in one run)
-- Basic reporting:
-  - report the first error token with type/value/row (and column if available)
-- Major recovery components:
-  - recover inside declaration sequences
-  - recover inside statement sequences
-  - recover inside expressions with multiple binary operations
-- Extensive recovery:
-  - extend recovery to additional syntactic structures (if/while/blocks/etc.)
-- Ensure recovery allows continuing parsing to find additional errors
-
-C) Consistent stderr Error Format
-- Standardize error messages to include:
-  - line number + column number
-  - brief explanation
-  - found token (type/value)
-
-
-EVERYONE:
-REPORT (Documentation) — Required Contributions from Everyone (All Members)
-For Phase 1, Phase 2, and Phase 3, everyone must contribute point-form notes under these headings:
-- What was done
-- Design decisions
-- Lessons learned
-- Assumptions/limitations + improvement ideas
-
-Everyone help edit and review the report. 
