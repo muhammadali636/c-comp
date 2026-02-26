@@ -1,0 +1,17 @@
+/* 
+   File name: CM.cup
+   Date: 
+   Purpose: simplified C- grammar ....
+*/
+
+// update ts 
+import absyn.*;
+
+terminal ERROR;
+non terminal Absyn program;
+
+start with program;
+
+program ::= 
+          {: RESULT = new Program(); :}
+          ;

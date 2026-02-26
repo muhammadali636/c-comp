@@ -1,0 +1,21 @@
+/* 
+   file name: 5.cm
+   Expected: lots of issues
+   Purpose: stress test err recovery and make sure parser continue to work after Lots of issues
+*/
+
+int main(void) {
+  int a
+  int !;
+  a = + ;
+  while ( 3 + 5 / *) {
+  }
+
+  if (void) {
+    a = 4;
+  else
+    a = a + 1
+
+  @@@
+  oogabooga!!!
+  /* uh multiline comment with no endin rip
