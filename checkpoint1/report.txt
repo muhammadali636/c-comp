@@ -1,0 +1,24 @@
+first figure out is this suppose to be a pdf or something idk.
+Paste your stuff in here so we can do the report later.
+
+Muhammad (phase 1)
+- What was done
+- Design decisions
+- Lessons learned
+- Assumptions/limitations + improvement ideas
+- Anything interesting u want to say?
+
+Richard (phase 2)
+
+- What was done
+- Design decisions
+- Lessons learned
+- Assumptions/limitations + improvement ideas
+- Anything interesting u want to say?
+
+Tameem (phase 3)
+- What was done
+- Design decisions
+- Lessons learned
+- Assumptions/limitations + improvement ideas
+- Anything interesting u want to say?

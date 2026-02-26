@@ -1,0 +1,112 @@
+3-Phase Plan (Group of 3) — CIS*4650 Checkpoint One (C- Compiler)
+
+this was 100% written by AI to help organize and will NOT be submitted.
+
+MUHAMMAD:
+PHASE 1 — Build System + Project Skeleton + Tests/Deliverables (Owner: Muhammad)
+
+A) Repo / Folder Structure
+- Set up a consistent project layout so work integrates cleanly:
+  - src/ (main driver + shared utilities)
+  - scanner/ (*.flex + generated scanner output)
+  - parser/ (*.cup + generated parser output)
+  - ast/ (AST node classes + printer)
+  - tests/ (1.cm … 5.cm)
+  - README.md
+  - REPORT (pdf or md)
+
+B) Makefile (Required)
+- Implement Makefile targets that work on linux.socs.uoguelph.ca:
+  - make:
+    - run JFlex to generate scanner code
+    - run CUP to generate parser code
+    - compile all Java sources (optionally into bin/)
+    - produce an executable entrypoint named: CM
+  - make clean:
+    - remove generated CUP/JFlex outputs
+    - remove .class files and build/bin directories
+  - make test (optional but recommended):
+    - run CM -a tests/1.cm
+    - run CM on tests/2.cm … tests/5.cm to confirm multiple errors are reported
+
+C) Command-Line Interface Contract (So everyone codes to the same interface)
+- Implement the driver/Main argument parsing:
+  - CM -a <file> builds the AST and prints it (after fully built)
+  - errors go to stderr with line/column + brief explanation
+- Provide stubs/hooks for calling the parser, so parser/scanner can plug in
+
+D) Test Programs (Required)
+- Create five required C- programs in tests/:
+  - 1.cm compiles with no errors
+  - 2.cm through 4.cm: each has <= 3 errors; each tests different lexical/syntax issues
+  - 5.cm: “anything goes” (many mixed errors)
+- Every test file must include a comment header describing:
+  - which errors exist
+  - what aspect(s) of the compiler the file is testing
+
+E) Packaging + Submission Readiness
+- README includes:
+  - build instructions (make)
+  - clean instructions (make clean)
+  - run instructions (CM -a <file>, and normal run)
+  - test instructions (how to run the 5 files)
+  - acknowledgement of any starter code used (e.g., Tiny sample parser)
+- Document the tar/gzip submission command (example):
+  - tar -czf checkpoint1.tgz <all required files>
+
+RICHARD:
+PHASE 2 — Scanner + Baseline Parser (No AST code first) (Owner: Richard)
+
+A) JFlex Scanner (Must use JFlex)
+- Implement major token types:
+  - keywords, symbols/operators, whitespace, identifiers, numbers, comments
+  - invalid characters (lexical errors)
+- Track row/column numbers for error reporting
+- Produce tokens compatible with CUP (sym.*), including token values
+
+B) CUP Grammar: Baseline Parse Only (No embedded actions first)
+- Implement a simplified grammar that uses CUP precedence/associativity directives
+  - simplify the provided C- grammar that used layering/associativity techniques
+- Connect parser to scanner
+- Goal: parse valid inputs successfully without AST output yet
+
+C) Verification on Valid Programs
+- Confirm the scanner+parser pipeline can parse known valid programs
+  - include course-provided or sample C- programs used for evaluation when available
+
+TAMEEM: 
+PHASE 3 — AST Construction + Error Recovery + Reporting + Polish (Owner: Tameem)
+
+A) AST Generation + -a Output
+- Add embedded CUP actions to build AST nodes
+- Implement AST node classes/structure based on recommended C- syntax tree approach
+- Ensure AST is printed only after it is completely built
+- Print a clear hierarchical representation
+
+B) Error Recovery (Must report multiple errors in one run)
+- Basic reporting:
+  - report the first error token with type/value/row (and column if available)
+- Major recovery components:
+  - recover inside declaration sequences
+  - recover inside statement sequences
+  - recover inside expressions with multiple binary operations
+- Extensive recovery:
+  - extend recovery to additional syntactic structures (if/while/blocks/etc.)
+- Ensure recovery allows continuing parsing to find additional errors
+
+C) Consistent stderr Error Format
+- Standardize error messages to include:
+  - line number + column number
+  - brief explanation
+  - found token (type/value)
+
+
+EVERYONE:
+REPORT (Documentation) — Required Contributions from Everyone (All Members)
+For Phase 1, Phase 2, and Phase 3, everyone must contribute point-form notes under these headings:
+- What was done
+- Design decisions
+- Lessons learned
+- Assumptions/limitations + improvement ideas
+
+Everyone help edit and review the report. 
