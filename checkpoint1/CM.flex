@@ -1,11 +1,7 @@
-/* Phase 1 placeholder lexer spec.
-   File name: CM.flex
-   Authors: Group 25- Richard Milovanov, Tameem Mughal, Muhammad Ali
-   Date: 
-   Purpose:  
+/* C- Scanner (JFlex)
+   Phase 2: tokens for CUP, row/column tracking, lexical error reporting.
 */
 
-// PLACEHOLDER
 import java_cup.runtime.*;
 
 %%
@@ -15,18 +11,87 @@ import java_cup.runtime.*;
 %column
 
 %eofval{
-  return null;
-%eofval};
+  return new Symbol(sym.EOF);
+%eofval}
 
 %{
   private Symbol symbol(int type) {
-    return new Symbol(type, yyline, yycolumn);
+    return new Symbol(type, yyline + 1, yycolumn + 1);
+  }
+  private Symbol symbol(int type, Object value) {
+    return new Symbol(type, yyline + 1, yycolumn + 1, value);
+  }
+  private void reportError(String msg) {
+    System.err.println("Lexical error at line " + (yyline + 1) + ", column " + (yycolumn + 1) + ": " + msg);
   }
 %}
 
-WS = [ \t\r\n]+
+LineTerminator = \r|\n|\r\n
+WhiteSpace     = [ \t\f] | {LineTerminator}
+Digit          = [0-9]
+Letter         = [a-zA-Z]
+Identifier     = {Letter}({Letter}|{Digit})*
+Number         = {Digit}+
+
+%state COMMENT
 
 %%
 
-{WS}   { /* skip */ }
-.      { return symbol(sym.ERROR); }
+<YYINITIAL> {
+  "/*"   { yybegin(COMMENT); }
+
+  /* Keywords */
+  "if"       { return symbol(sym.IF); }
+  "else"     { return symbol(sym.ELSE); }
+  "int"      { return symbol(sym.INT); }
+  "void"     { return symbol(sym.VOID); }
+  "return"   { return symbol(sym.RETURN); }
+  "while"    { return symbol(sym.WHILE); }
+  /* Identifiers and numbers (input/output are built-in functions, matched as ID) */
+  {Identifier}  { return symbol(sym.ID, yytext()); }
+  {Number}      { return symbol(sym.NUM, Integer.valueOf(yytext())); }
+
+  /* Operators */
+  "+"   { return symbol(sym.PLUS); }
+  "-"   { return symbol(sym.MINUS); }
+  "*"   { return symbol(sym.TIMES); }
+  "/"   { return symbol(sym.DIVIDE); }
+  "<"   { return symbol(sym.LT); }
+  "<="  { return symbol(sym.LE); }
+  ">"   { return symbol(sym.GT); }
+  ">="  { return symbol(sym.GE); }
+  "=="  { return symbol(sym.EQ); }
+  "!="  { return symbol(sym.NE); }
+  "="   { return symbol(sym.ASSIGN); }
+
+  /* Separators */
+  ";"   { return symbol(sym.SEMI); }
+  ","   { return symbol(sym.COMMA); }
+  "["   { return symbol(sym.LBRACKET); }
+  "]"   { return symbol(sym.RBRACKET); }
+  "("   { return symbol(sym.LPAREN); }
+  ")"   { return symbol(sym.RPAREN); }
+  "{"   { return symbol(sym.LBRACE); }
+  "}"   { return symbol(sym.RBRACE); }
+
+  /* Whitespace: skip */
+  {WhiteSpace}  { /* skip */ }
+
+  /* Invalid character */
+  .            {
+    reportError("invalid character '" + yytext() + "' (code " + (int)yytext().charAt(0) + ")");
+    return symbol(sym.ERROR);
+  }
+}
+
+<COMMENT> {
+  "*/"       { yybegin(YYINITIAL); }
+  [^*\n\r]+  { /* skip */ }
+  "*"        { /* skip */ }
+  \n|\r|\r\n { /* skip */ }
+  <<EOF>>    {
+    reportError("unclosed comment");
+    yybegin(YYINITIAL);
+    return symbol(sym.ERROR);
+  }
+}

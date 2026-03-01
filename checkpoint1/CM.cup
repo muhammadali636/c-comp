@@ -1,17 +1,185 @@
-/* 
+/*
    File name: CM.cup
-   Date: 
-   Purpose: simplified C- grammar ....
+   Purpose: C- grammar using CUP precedence/associativity (baseline parse, minimal AST).
+   Phase 2: parse valid programs; AST actions kept minimal for compatibility.
 */
 
-// update ts 
+import java_cup.runtime.*;
 import absyn.*;
 
+// Terminals (with value where needed)
+terminal String ID;
+terminal Integer NUM;
+terminal PLUS, MINUS, TIMES, DIVIDE;
+terminal LT, LE, GT, GE, EQ, NE;
+terminal ASSIGN, SEMI, COMMA;
+terminal LBRACKET, RBRACKET, LPAREN, RPAREN, LBRACE, RBRACE;
+terminal IF, ELSE, INT, VOID, RETURN, WHILE;
 terminal ERROR;
-non terminal Absyn program;
+
+// Nonterminals
+non terminal Object program;
+non terminal Object declaration_list, declaration;
+non terminal Object var_declaration, fun_declaration;
+non terminal Object type_specifier;
+non terminal Object params, param_list, param;
+non terminal Object compound_stmt;
+non terminal Object local_declarations, statement_list;
+non terminal Object statement;
+non terminal Object expression_stmt, selection_stmt, iteration_stmt, return_stmt;
+non terminal Object expression, var;
+non terminal Object simple_expression, additive_expression, term, factor;
+non terminal Object call, args, arg_list;
+
+// Precedence (low to high): assign < relop < +- < */
+precedence right ASSIGN;
+precedence nonassoc LT, LE, GT, GE, EQ, NE;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
 
 start with program;
 
-program ::= 
-          {: RESULT = new Program(); :}
-          ;
+program ::= declaration_list
+  {: RESULT = new Program(); :}
+  ;
+
+declaration_list ::= declaration_list declaration
+  ;
+declaration_list ::= declaration
+  ;
+
+declaration ::= var_declaration
+  ;
+declaration ::= fun_declaration
+  ;
+
+var_declaration ::= type_specifier ID SEMI
+  ;
+var_declaration ::= type_specifier ID LBRACKET NUM RBRACKET SEMI
+  ;
+
+type_specifier ::= INT
+  ;
+type_specifier ::= VOID
+  ;
+
+fun_declaration ::= type_specifier ID LPAREN params RPAREN compound_stmt
+  ;
+
+params ::= param_list
+  ;
+params ::= VOID
+  ;
+
+param_list ::= param_list COMMA param
+  ;
+param_list ::= param
+  ;
+
+param ::= type_specifier ID
+  ;
+param ::= type_specifier ID LBRACKET RBRACKET
+  ;
+
+compound_stmt ::= LBRACE local_declarations statement_list RBRACE
+  ;
+
+local_declarations ::= local_declarations var_declaration
+  ;
+local_declarations ::= /* empty */
+  ;
+
+statement_list ::= statement_list statement
+  ;
+statement_list ::= /* empty */
+  ;
+
+statement ::= expression_stmt
+  ;
+statement ::= compound_stmt
+  ;
+statement ::= selection_stmt
+  ;
+statement ::= iteration_stmt
+  ;
+statement ::= return_stmt
+  ;
+
+expression_stmt ::= expression SEMI
+  ;
+expression_stmt ::= SEMI
+  ;
+
+selection_stmt ::= IF LPAREN expression RPAREN statement
+  ;
+selection_stmt ::= IF LPAREN expression RPAREN statement ELSE statement
+  ;
+
+iteration_stmt ::= WHILE LPAREN expression RPAREN statement
+  ;
+
+return_stmt ::= RETURN SEMI
+  ;
+return_stmt ::= RETURN expression SEMI
+  ;
+
+expression ::= var ASSIGN expression
+  ;
+expression ::= simple_expression
+  ;
+
+var ::= ID
+  ;
+var ::= ID LBRACKET expression RBRACKET
+  ;
+
+simple_expression ::= additive_expression LT additive_expression
+  ;
+simple_expression ::= additive_expression LE additive_expression
+  ;
+simple_expression ::= additive_expression GT additive_expression
+  ;
+simple_expression ::= additive_expression GE additive_expression
+  ;
+simple_expression ::= additive_expression EQ additive_expression
+  ;
+simple_expression ::= additive_expression NE additive_expression
+  ;
+simple_expression ::= additive_expression
+  ;
+
+additive_expression ::= additive_expression PLUS term
+  ;
+additive_expression ::= additive_expression MINUS term
+  ;
+additive_expression ::= term
+  ;
+
+term ::= term TIMES factor
+  ;
+term ::= term DIVIDE factor
+  ;
+term ::= factor
+  ;
+
+factor ::= LPAREN expression RPAREN
+  ;
+factor ::= var
+  ;
+factor ::= call
+  ;
+factor ::= NUM
+  ;
+
+call ::= ID LPAREN args RPAREN
+  ;
+
+args ::= arg_list
+  ;
+args ::= /* empty */
+  ;
+
+arg_list ::= arg_list COMMA expression
+  ;
+arg_list ::= expression
+  ;
