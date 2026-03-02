@@ -6,22 +6,14 @@
 */
 package absyn;
 
-// REPLACE with full AST  classes.
-public abstract class Absyn 
-{
+public abstract class Absyn {
   public int row;
   public int col;
 
-  public Absyn() {
-    this(0,0);
+  public Absyn(int row, int col) {
+    this.row = row;
+    this.col = col;
   }
 
-  public Absyn(int r, int c) 
-  {
-    row=r;
-    col=c;
-  }
-
-  // the entrypoint for the visitorr used by CM.java when printin AST.
-  public abstract void accept(Object visitor, int level);
+  public abstract void accept(AbsynVisitor visitor, int level);
 }

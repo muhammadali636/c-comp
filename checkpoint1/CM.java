@@ -38,10 +38,17 @@ class CM
     {
       parser p = new parser(new Lexer(new FileReader(file)));
 
-      // parser should return AST root in parse().value 
-      Absyn ast = (Absyn) (p.parse().value);
+      // parser should return AST root in parse().value
+      java_cup.runtime.Symbol result = p.parse();
 
-      if (wantAst && SHOW_TREE && ast !=null) 
+      if (result == null || result.value == null) {
+        System.err.println("Parsing failed — no AST produced.");
+        System.exit(1);
+      }
+
+      Absyn ast = (Absyn) result.value;
+
+      if (wantAst && SHOW_TREE)
       {
         System.out.println("Abstract Syntax Tree:");
         ShowTreeVisitor v = new ShowTreeVisitor();

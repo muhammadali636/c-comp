@@ -30,7 +30,7 @@ LineTerminator = \r|\n|\r\n
 WhiteSpace     = [ \t\f] | {LineTerminator}
 Digit          = [0-9]
 Letter         = [a-zA-Z]
-Identifier     = {Letter}({Letter}|{Digit})*
+Identifier     = [_a-zA-Z]([_a-zA-Z0-9])*
 Number         = {Digit}+
 
 %state COMMENT
@@ -41,12 +41,15 @@ Number         = {Digit}+
   "/*"   { yybegin(COMMENT); }
 
   /* Keywords */
+  "bool"     { return symbol(sym.BOOL); }
   "if"       { return symbol(sym.IF); }
   "else"     { return symbol(sym.ELSE); }
   "int"      { return symbol(sym.INT); }
   "void"     { return symbol(sym.VOID); }
   "return"   { return symbol(sym.RETURN); }
   "while"    { return symbol(sym.WHILE); }
+  "true"     { return symbol(sym.TRUTH, true); }
+  "false"    { return symbol(sym.TRUTH, false); }
   /* Identifiers and numbers (input/output are built-in functions, matched as ID) */
   {Identifier}  { return symbol(sym.ID, yytext()); }
   {Number}      { return symbol(sym.NUM, Integer.valueOf(yytext())); }
@@ -63,6 +66,9 @@ Number         = {Digit}+
   "=="  { return symbol(sym.EQ); }
   "!="  { return symbol(sym.NE); }
   "="   { return symbol(sym.ASSIGN); }
+  "~"   { return symbol(sym.NOT); }
+  "||"  { return symbol(sym.OR); }
+  "&&"  { return symbol(sym.AND); }
 
   /* Separators */
   ";"   { return symbol(sym.SEMI); }

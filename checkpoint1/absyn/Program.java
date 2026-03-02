@@ -6,25 +6,15 @@
 */
 package absyn;
 
-// REPLACE with REAL root node that includes declarations list, etc.
-public class Program extends Absyn 
-{
+public class Program extends Absyn {
+  public DecList declarations;
 
-  public Program() {
-    super(0,0);
+  public Program(DecList declarations) {
+    super(0, 0);
+    this.declarations = declarations;
   }
 
-  public void accept(Object visitor, int level) 
-  {
-    // call visitor.visit(Program, int) 
-    try 
-    {
-      visitor.getClass()
-          .getMethod("visit", Program.class, int.class)
-          .invoke(visitor, this, level);
-    } 
-    catch (Exception e) {
-      System.out.println("(Program)");
-    }
+  public void accept(AbsynVisitor visitor, int level) {
+    visitor.visit(this, level);
   }
 }
