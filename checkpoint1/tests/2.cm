@@ -1,7 +1,7 @@
 /* 
    file name: 2.cm
    Authors: muhammad ali, tameem mughal, richard milovanov
-   Expected errs: Unrecognized character '@' and '#'.
+   Expected errors: invalid characters '@' and '#'.
    Purpose: verify scanner reports invalid characters with row column and continues.
    Date: feb 24 2026
 */

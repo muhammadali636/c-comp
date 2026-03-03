@@ -3,6 +3,7 @@
    author: muhammad ali, tameem mughal, richard milo
    Expected: no lexical or syntactic errors.
    Purpose: valid program to confirm scanner + parser + AST works!
+   Errors: No errors in this file!!
    Date: feb 24 2026
 */
 

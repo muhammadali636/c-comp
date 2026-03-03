@@ -1,7 +1,7 @@
 /* 
    file name: 5.cm
-   Expected: lots of issues
-   Purpose: stress test err recovery and make sure parser continue to work after Lots of issues
+   Expected Errors: missing ';' after 'int a'; invalid identifier 'int !;'; invalid expression 'a = + ;'; invalid while condition '3 + 5 / *'; broken if/else structure; missing ';' after 'a = a + 1'; invalid tokens '@@@' and 'oogabooga!!!'; unterminated block comment. 
+   Purpose: stress test error recovery and make sure the parser continues after lots of issues.
 */
 
 int main(void) {
