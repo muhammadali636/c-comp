@@ -1,21 +1,41 @@
 /* 
    file name: 5.cm
-   Expected Errors: missing ';' after 'int a'; invalid identifier 'int !;'; invalid expression 'a = + ;'; invalid while condition '3 + 5 / *'; broken if/else structure; missing ';' after 'a = a + 1'; invalid tokens '@@@' and 'oogabooga!!!'; unterminated block comment. 
-   Purpose: stress test error recovery and make sure the parser continues after lots of issues.
+   Expected Errors: undefined variable, redefined variable, bad function call argument count, bad function call argument type, nonarray used as array, array used without index, void function used in expression, return type mismatch.
+   Purpose: stress test semantic analysis and make sure the analyzer continues after lots of semantic issues.
+   authors: group 25 - muhammad ali, tameem mughal, richard milovanov
+   date: mar 11 2026
 */
 
-int main(void) {
-  int a
-  int !;
-  a = + ;
-  while ( 3 + 5 / *) {
-  }
+int sum(int a, int b)
+{
+  return a + b;
+}
 
-  if (void) {
-    a = 4;
-  else
-    a = a + 1
+void printer(int x)
+{
+  output(x);
+  return;
+}
 
-  @@@
-  oogabooga!!!
-  /* uh multiline comment with no endin rip
+int badReturn(void)
+{
+  return;
+}
+
+void main(void)
+{
+  int a;
+  int a;
+  int b;
+  int arr[5];
+  void v;
+
+  a = x + 1;
+  b = sum(1);
+  b = sum(arr, 2);
+  b = arr;
+  b = a[2];
+  b = printer(7);
+  arr[printer(1)] = 3;
+  output(sum(1, 2, 3));
+}

@@ -1,15 +1,16 @@
 /* 
    file name: 2.cm
    Authors: muhammad ali, tameem mughal, richard milovanov
-   Expected errors: invalid characters '@' and '#'.
-   Purpose: verify scanner reports invalid characters with row column and continues.
-   Date: feb 24 2026
+   Expected errors: undefined variable 'y', undefined function 'foo'.
+   Purpose: verify semantic analyzer reports use of undefined identifiers and calls to undefined functions.
+   Date: mar 11 2026
 */
 
 void main(void) 
 {
   int x;
-  x = 7 @ 2;
-  x = x # 3;
+
+  x = y + 1;
+  foo(x);
   output(x);
 }

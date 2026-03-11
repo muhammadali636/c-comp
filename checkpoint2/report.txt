@@ -9,30 +9,30 @@
 ## Muhammad — PHASE 1 (Wiring + Tests + Coordination)
 
 ### What was done
-- 
-- 
-- 
+- Updated the driver to support the `-s` CLI flag for running semantic analysis.
+- Added placeholder wiring for the semantic analysis stage so it can connect with the AST and later semantic checks.
+- Updated the Makefile to include the semantic analysis build/run steps.
+- Created and updated `tests/1.cm` – `tests/5.cm` for semantic analysis.
+- Added headers in each test file listing expected errors and the rule being tested.
 
 ### Design decisions
-- 
-- 
-- 
+- Kept the CLI structure samilar with earlier flags used for scanning and parsing.
+- Added semantic analysis as a separate stage triggered by `-s`.
+- Kept the test file comment format similar to Checkpoint 1.
 
 ### Lessons learned
-- 
-- 
-- 
+- Adding a new compiler stage requires changes in multiple places (driver, build system, tests).
+- Having simple test programs helps verify the pipeline works.
 
 ### Assumptions / limitations + improvement ideas
-- 
-- 
-- 
+- Current semantic analysis wiring includes placeholders until full semantic checks are implemented.
+- Error output format may change once semantic checks are finalized.
+- More semantic tests could be added later.
 
 ### Anything interesting you want to say?
-- 
-- 
-
----
+- Phase 1 focused on connecting the semantic analysis stage into the compiler pipeline through the driver and `-s` CLI flag.
+- Placeholder wiring was added so the semantic analyzer can later run on the AST produced by the parser.
+- The Makefile and test files updated so the new stage can be built and tested easily.
 
 ## Richard — PHASE 2 (Symbol Tables + Scopes + Undefined/Redefined)
 

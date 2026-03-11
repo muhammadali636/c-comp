@@ -1,19 +1,26 @@
 /* 
    file name: 3.cm
    authors: group 25 - muhammad ali, tameem mughal, richard milovanov.
-   Expected errors: Missing semicolon after declaration, missing right parenthesis in while condition.
-   Purpose: verify parser reports syntax errors in one run.
-   date: feb 24 2026
+   Expected errors: redefined variable 'x', redefined function 'helper'.
+   Purpose: verify semantic analyzer reports redefinitions in the same scope / duplicate declarations.
+   date: mar 11 2026
 */
+
+int helper(int a)
+{
+  return a;
+}
+
+int helper(int b)
+{
+  return b + 1;
+}
 
 void main(void) 
 {
-  int y
-  y = 1;
+  int x;
+  int x;
 
-  while (y < 5 {
-    y = y + 1;
-  }
-
-  output(y);
+  x = 1;
+  output(x);
 }

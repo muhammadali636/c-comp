@@ -1,17 +1,23 @@
 /* 
    file name: 4.cm
-   Expected errors: Empty while condition: while () 
-   Purpose: test statement lvl recovery
+   Expected errors: void function returns a value, int function returns no value.
+   Purpose: test semantic checks for incorrect return statements.
    authors: group 25 - muhammad ali, tameem mughal, richard milovanov
-   date: feb 26 2026
+   date: mar 11 2026
 */
+
+void badVoid(void) 
+{
+  return 5;
+}
+
+int badInt(void) 
+{
+  return;
+}
 
 void main(void) 
 {
-  int k;
-  k = 0;
-  while ()  {
-    k = k + 1;
-    }
-  output(k);
+  badVoid();
+  output(0);
 }
