@@ -7,7 +7,10 @@ import java_cup.runtime.*;
 import absyn.*;
 
 parser code {:
+  public boolean hasSyntaxErrors = false; // set true if any syntax error occurs
+
   public void report_error(String message, Object info) {
+    hasSyntaxErrors = true; // syntax error happened
     StringBuffer m = new StringBuffer("Syntax error");
     if (info instanceof java_cup.runtime.Symbol) {
       java_cup.runtime.Symbol s = (java_cup.runtime.Symbol) info;
@@ -23,8 +26,10 @@ parser code {:
   }
 
   public void report_fatal_error(String message, Object info) {
+    hasSyntaxErrors = true; // fatal syntax error happened
     report_error(message, info);
     System.err.println("Fatal syntax error; cannot continue.");
+    super.report_fatal_error(message, info); // actually abort parsing
   }
 :};
 
