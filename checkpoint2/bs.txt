@@ -1,0 +1,177 @@
+3-Phase Plan (Group of 3) — CIS*4650 Checkpoint two (C- Compiler)
+
+this was 100% written by AI to help organize and will NOT be submitted.
+
+Goal:
+- If parsing succeeds (no syntax errors), traverse the AST to build SYMBOL TABLES and perform TYPE CHECKING.
+- Report semantic errors to stderr with line/column + short message.
+- Implement “-s” to save symbol table output (scopes + indentation).
+- If syntax errors exist, STOP after parsing (do not run semantic analysis).
+
+==============================================================
+PHASE 1 — MUHAMMAD: Wiring + Tests + Coordination
+==============================================================
+
+A) Output format + Error Contract 
+- Write a “contract” in README/wiki for consistent output:
+  - Semantic errors:  line:col: Semantic error: <message>
+  - Symbol table output: indent by scope nesting level
+  - Print each scope’s symbols RIGHT BEFORE leaving that scope
+- Add 2–3 example lines so everyone matches the same style.
+
+B) Command-line behaviour “-s” (wiring)
+- Add support in the CM driver:
+  - CM -s <file>  => write symbol table trace to a related output file
+  - CM -a -s <file> => write both AST output and symbol table output
+- Enforce rule:
+  - If syntax errors occurred, terminate and do not run semantic analysis.
+
+C) Makefile + Build Sanity
+- Ensure “make” and “make clean” still work after new files are added.
+- (Optional) Add “make test” to quickly run:
+  - CM -a tests/1.cm
+  - CM -s tests/1.cm
+  - CM -s tests/2.cm ... tests/5.cm
+
+D) Create/Adjust the 5 Required Test Programs for checkpoint2
+- Provide tests/1.cm to tests/5.cm for semantic analysis:
+  - 1.cm: no semantic errors
+  - 2.cm–4.cm: <= 3 semantic errors each (different categories)
+  - 5.cm: many mixed errors
+- Each file must have a comment header listing:
+  - expected errors
+  - which rule/category it tests (undefined/redefined, type mismatch, wrong return, bad call, array index type, etc.)
+
+Deliverable for Phase 1:
+- -s flag works and writes output to a file
+- Program stops semantic pass if syntax errors exist
+- Tests exist and are clearly documented
+- Build remains stable with Makefile
+
+Integration point:
+- wire in a call like:
+  - new SemanticAnalyzer(...).analyze(ast)
+
+==============================================================
+PHASE 2 — RICHARD: SYMBOL TABLES + SCOPES + UNDEFINED/REDEFINED
+==============================================================
+
+A) Symbol Table Core Data Structures
+- Implement a scope stack + per-scope hash table:
+  - Scope = HashMap<String, Symbol>
+  - Stack of scopes supports nested blocks/functions
+- Provide core operations:
+  - enterScope(), exitScope()
+  - insert(symbol) into current scope
+  - lookup(name) searching outward through scopes
+  - lookupCurrent(name) in current scope only
+
+B) Symbol Model (must support type-checking later)
+- Implement Symbol data structure with fields like:
+  - name
+  - kind: var / array / function / parameter
+  - base type: int / bool / void
+  - array size (if array)
+  - function signature:
+    - return type
+    - parameter list types (and param count)
+  - declaration position (line/col) for good error messages
+
+C) Scope Rules (fully nested)
+- Implement correct scope entry/exit for:
+  - global scope
+  - function scope (and parameters)
+  - compound blocks { ... } inside functions (nested)
+- Ensure nested scopes behave correctly:
+  - inner declarations can shadow outer names
+  - but redeclaration in SAME scope is an error
+
+D) Semantic Errors: Undefined and Redefined
+- Redefined identifier:
+  - same name declared twice in SAME scope => error
+- Undefined identifier:
+  - using a variable/array/function name not found in any visible scope => error
+- Keep going after errors (do not crash; report and continue)
+
+Deliverable for Phase 2:
+- Symbol tables build correctly for valid programs
+- Correct nesting + lookup behavior
+- Undefined/redefined errors reported consistently
+- Symbols contain enough info for Phase 3 type checking
+
+Integration point:
+- Tameem depends on lookup(name) returning correct type/signature info
+- Muhammad depends on an entry method to run symbol collection + optional -s printing
+
+==============================================================
+PHASE 3 — TAMEEM: TYPE CHECKING + SEMANTIC ANALYZER VISITOR + RECOVERY
+==============================================================
+
+A) Type Model + Helper Functions
+- Implement Type representation:
+  - INT, BOOL, VOID, ERROR  (ERROR helps recovery)
+- Helper checks:
+  - expectInt(type, context)
+  - expectBool(type, context)
+  - compatible(lhs, rhs) for assignments
+  - operator rules for unary/binary operations
+- Ensure type errors don’t crash the run (return ERROR and continue).
+
+B) SemanticAnalyzer Post-order Visitor (Type Checking)
+- Traverse AST in post-order; return a type for expressions.
+- Implement rubric-required checks:
+  1) Array index must be int
+  2) Assignment LHS and RHS must be compatible
+  3) Operands of binary/unary operations must be compatible
+  4) Function calls/returns:
+     - call arg count matches param count
+     - each arg type matches expected param type
+     - return statements match function return type
+  5) If/while test conditions are int/bool (per assignment notes)
+
+C) Error Reporting Format (match Phase 1 contract)
+- All semantic errors go to stderr:
+  - line:col: Semantic error: <brief message>
+- Use AST node positions (or stored positions) to include line/col.
+
+D) Semantic Error Recovery (continue after errors)
+- Do NOT stop at first semantic error.
+- Strategy:
+  - If mismatch or undefined symbol, report error and return ERROR type.
+  - Parent nodes continue; reduce “cascading” duplicate errors when possible.
+
+Deliverable for Phase 3:
+- SemanticAnalyzer.java completes type checking for all required rules
+- Reports multiple semantic errors in one run
+- Integrates cleanly with Phase 2 symbol table + Phase 1 CLI/-s output
+
+==============================================================
+Shared Milestones (Recommended for Integration)
+==============================================================
+
+Milestone 1 — Interface lock (early)
+- Agree on:
+  - Type representation (INT/BOOL/VOID/ERROR)
+  - Symbol fields (arrays + function signatures)
+  - How line/col is retrieved from AST nodes
+  - Output formats for stderr and -s
+
+Milestone 2 — Symbol table works on tests/1.cm
+- -s prints nested scopes properly
+- No semantic errors for 1.cm
+
+Milestone 3 — Type checking works on tests/2.cm–5.cm
+- Errors are correct and consistent
+- Program continues after errors without crashing
+
+==============================================================
+Report (Group Effort)
+==============================================================
+Everyone contributes point-form notes under:
+- What was done
+- Design decisions
+- Lessons learned
+- Assumptions/limitations + improvement ideas
+- Individual contribution summary (since you’re a group)
+
+End of plan.

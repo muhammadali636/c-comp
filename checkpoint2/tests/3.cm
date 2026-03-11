@@ -1,0 +1,19 @@
+/* 
+   file name: 3.cm
+   authors: group 25 - muhammad ali, tameem mughal, richard milovanov.
+   Expected errors: Missing semicolon after declaration, missing right parenthesis in while condition.
+   Purpose: verify parser reports syntax errors in one run.
+   date: feb 24 2026
+*/
+
+void main(void) 
+{
+  int y
+  y = 1;
+
+  while (y < 5 {
+    y = y + 1;
+  }
+
+  output(y);
+}

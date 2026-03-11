@@ -1,0 +1,89 @@
+# Checkpoint 2 Report Notes (Team Draft)
+
+> Paste your notes under your section.  
+> Keep it point-form and specific (features, files changed, tricky bugs, examples).  
+> We will use this later to write the final report (PDF/Doc).
+
+---
+
+## Muhammad — PHASE 1 (Wiring + Tests + Coordination)
+
+### What was done
+- 
+- 
+- 
+
+### Design decisions
+- 
+- 
+- 
+
+### Lessons learned
+- 
+- 
+- 
+
+### Assumptions / limitations + improvement ideas
+- 
+- 
+- 
+
+### Anything interesting you want to say?
+- 
+- 
+
+---
+
+## Richard — PHASE 2 (Symbol Tables + Scopes + Undefined/Redefined)
+
+### What was done
+- 
+- 
+- 
+
+### Design decisions
+- 
+- 
+- 
+
+### Lessons learned
+- 
+- 
+- 
+
+### Assumptions / limitations + improvement ideas
+- 
+- 
+- 
+
+### Anything interesting you want to say?
+- 
+- 
+
+---
+
+## Tameem — PHASE 3 (Type Checking + Semantic Analyzer + Recovery)
+
+### What was done
+- 
+- 
+- 
+
+### Design decisions
+- 
+- 
+- 
+
+### Lessons learned
+- 
+- 
+- 
+
+### Assumptions / limitations + improvement ideas
+- 
+- 
+- 
+
+### Anything interesting you want to say?
+- 
+- 

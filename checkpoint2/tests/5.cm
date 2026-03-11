@@ -1,0 +1,21 @@
+/* 
+   file name: 5.cm
+   Expected Errors: missing ';' after 'int a'; invalid identifier 'int !;'; invalid expression 'a = + ;'; invalid while condition '3 + 5 / *'; broken if/else structure; missing ';' after 'a = a + 1'; invalid tokens '@@@' and 'oogabooga!!!'; unterminated block comment. 
+   Purpose: stress test error recovery and make sure the parser continues after lots of issues.
+*/
+
+int main(void) {
+  int a
+  int !;
+  a = + ;
+  while ( 3 + 5 / *) {
+  }
+
+  if (void) {
+    a = 4;
+  else
+    a = a + 1
+
+  @@@
+  oogabooga!!!
+  /* uh multiline comment with no endin rip
