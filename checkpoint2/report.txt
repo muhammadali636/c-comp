@@ -37,28 +37,28 @@
 ## Richard — PHASE 2 (Symbol Tables + Scopes + Undefined/Redefined)
 
 ### What was done
-- 
-- 
-- 
+- Implemented a symbol table with nested scopes for the C- AST.
+- Wrote a semantic analyzer visitor that walks the AST and fills the symbol table.
+- Added checks and error messages for undefined and redefined identifiers and wired `-s` to print scopes.
 
 ### Design decisions
-- 
-- 
-- 
+- Used a stack of hash maps (one map per scope) to keep scope handling simple.
+- Represented symbols with a small `Symbol` class plus enums for kind (var/array/function/param) and base type.
+- Printed each scope’s symbols right before leaving the scope, with indentation for nesting level.
 
 ### Lessons learned
-- 
-- 
-- 
+- Thinking in terms of a scope stack makes it easier to reason about nested blocks and functions.
+- Built-in functions like `input` and `output` need entries in the symbol table so user code type-checks cleanly.
+- Small, focused tests (1.cm–5.cm) are very helpful for validating symbol table behaviour.
 
 ### Assumptions / limitations + improvement ideas
-- 
-- 
-- 
+- Phase 2 only handles undefined/redefined identifiers; full type rules are left for Phase 3.
+- Built-in functions are hardcoded in the analyzer instead of being read from a separate library description.
+- Symbol table printing is minimal; later we could print more detail like declaration locations or parameter names.
 
 ### Anything interesting you want to say?
-- 
-- 
+- It was satisfying to see the printed symbol tables match the structure of real C- programs.
+- Debugging both locally and on the school server showed how much tooling and environment affect compiler work.
 
 ---
 
