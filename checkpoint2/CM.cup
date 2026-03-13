@@ -29,7 +29,12 @@ parser code {:
     hasSyntaxErrors = true; // fatal syntax error happened
     report_error(message, info);
     System.err.println("Fatal syntax error; cannot continue.");
-    super.report_fatal_error(message, info); // actually abort parsing
+    try {
+      super.report_fatal_error(message, info); // actually abort parsing
+    } catch (Exception e) {
+      // Wrap checked exception so parser code still aborts cleanly
+      throw new RuntimeException(e);
+    }
   }
 :};
 
