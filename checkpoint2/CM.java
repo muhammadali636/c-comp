@@ -103,11 +103,11 @@ class CM
         symWriter = new PrintWriter(symBuffer);
       }
 
-      // run semantic analysis (Checkpoint 2 PLACEHOLDERS)
+      // run semantic analysis (symbol tables + (later) type checking)
       boolean semanticOk = true;
-      // SymbolTable st = new SymbolTable(); // FOR symbol table
-      // SemanticAnalyzer sa = new SemanticAnalyzer(st, symWriter); // FOR semantic analyzer
-      // semanticOk = sa.analyze(ast); // semantic pass
+      SymbolTable st = new SymbolTable(); // symbol table
+      SemanticAnalyzer sa = new SemanticAnalyzer(st, symWriter); // semantic analyzer
+      semanticOk = sa.analyze(ast); // semantic pass
 
       if (symWriter != null) 
       {
