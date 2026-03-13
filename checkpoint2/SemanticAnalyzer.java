@@ -30,6 +30,8 @@ public class SemanticAnalyzer implements AbsynVisitor {
     }
     // global scope
     symtab.enterScope();
+    // built-in functions: int input(void); void output(int);
+    installBuiltIns();
     currentContext = Context.GLOBAL;
     ast.accept(this, 0);
     // print global scope right before leaving it
@@ -39,6 +41,30 @@ public class SemanticAnalyzer implements AbsynVisitor {
   }
 
   // === Helpers ===
+
+  private void installBuiltIns() {
+    // int input(void);
+    SymbolTable.Symbol inputFun =
+        SymbolTable.Symbol.function(
+            "input",
+            SymbolTable.BaseType.INT,
+            new ArrayList<SymbolTable.BaseType>(),
+            0,
+            0);
+    symtab.insert(inputFun);
+
+    // void output(int);
+    List<SymbolTable.BaseType> outputParams = new ArrayList<SymbolTable.BaseType>();
+    outputParams.add(SymbolTable.BaseType.INT);
+    SymbolTable.Symbol outputFun =
+        SymbolTable.Symbol.function(
+            "output",
+            SymbolTable.BaseType.VOID,
+            outputParams,
+            0,
+            0);
+    symtab.insert(outputFun);
+  }
 
   private SymbolTable.BaseType fromNameTy(NameTy ty) {
     if (ty == null) {
