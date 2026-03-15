@@ -108,6 +108,9 @@ declaration_list ::= declaration_list:dl error SEMI
 declaration_list ::= error SEMI
   {: RESULT = new DecList(null, null); :}
   ;
+declaration_list ::= declaration_list:dl error RBRACE
+  {: RESULT = dl; :}
+  ;
 
 /* ---- declarations ---- */
 
@@ -267,11 +270,20 @@ selection_stmt ::= IF:i LPAREN expression:e RPAREN statement:s1 ELSE statement:s
 selection_stmt ::= IF:i LPAREN expression:e RPAREN statement:s
   {: RESULT = new IfExp(ileft, iright, e, s, new NilExp(ileft, iright)); :}
   ;
+selection_stmt ::= IF:i LPAREN error RPAREN statement:s1 ELSE statement:s2
+  {: RESULT = new IfExp(ileft, iright, new NilExp(ileft, iright), s1, s2); :}
+  ;
+selection_stmt ::= IF:i LPAREN error RPAREN statement:s
+  {: RESULT = new IfExp(ileft, iright, new NilExp(ileft, iright), s, new NilExp(ileft, iright)); :}
+  ;
 
 /* ---- iteration statement ---- */
 
 iteration_stmt ::= WHILE:w LPAREN expression:e RPAREN statement:s
   {: RESULT = new WhileExp(wleft, wright, e, s); :}
+  ;
+iteration_stmt ::= WHILE:w LPAREN error RPAREN statement:s
+  {: RESULT = new WhileExp(wleft, wright, new NilExp(wleft, wright), s); :}
   ;
 
 /* ---- return statement ---- */
@@ -281,6 +293,9 @@ return_stmt ::= RETURN:r SEMI
   ;
 return_stmt ::= RETURN:r expression:e SEMI
   {: RESULT = new ReturnExp(rleft, rright, e); :}
+  ;
+return_stmt ::= RETURN:r error SEMI
+  {: RESULT = new ReturnExp(rleft, rright, new NilExp(rleft, rright)); :}
   ;
 
 /* ---- expressions ---- */
@@ -390,6 +405,9 @@ signed_factor ::= factor:f
 factor ::= LPAREN expression:e RPAREN
   {: RESULT = e; :}
   ;
+factor ::= LPAREN error RPAREN
+  {: RESULT = new NilExp(0, 0); :}
+  ;
 factor ::= var:v
   {: RESULT = new VarExp(vleft, vright, v); :}
   ;
@@ -401,6 +419,9 @@ factor ::= NUM:n
   ;
 factor ::= TRUTH:t
   {: RESULT = new BoolExp(tleft, tright, t); :}
+  ;
+factor ::= ERROR:e
+  {: RESULT = new NilExp(eleft, eright); :}
   ;
 
 /* ---- call ---- */
@@ -415,6 +436,9 @@ args ::= arg_list:al
   {: RESULT = al; :}
   ;
 args ::= /* empty */
+  {: RESULT = null; :}
+  ;
+args ::= error
   {: RESULT = null; :}
   ;
 

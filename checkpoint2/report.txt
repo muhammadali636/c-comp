@@ -65,25 +65,31 @@
 ## Tameem — PHASE 3 (Type Checking + Semantic Analyzer + Recovery)
 
 ### What was done
-- 
-- 
-- 
+- Implemented full type checking in SemanticAnalyzer.java using a post-order visitor pattern.
+- Added type tracking via `lastType` and `lastIsArray` fields that propagate types up the AST after each visit.
+- Implemented all five marking-scheme type checks: array index must be int, assignment type compatibility, operator operand types, function call argument count/type matching, and return type validation.
+- Added checks for if/while conditions (must be bool or int), void variable declarations, array-vs-scalar mismatches in function arguments, and using a non-array as an array.
+- Fixed ShowTreeVisitor to accept a PrintWriter parameter so the `-a` flag actually writes the AST tree to the output file instead of stdout.
+- Added 7 new error recovery rules to CM.cup (if/else condition, while condition, return expression, parenthesized expression, function call arguments, malformed function at global level), bringing the total from 5 to 12, since we lost marks for this previously.
+- Removed unused `Letter` macro from CM.flex and added an `ERROR` token production in CM.cup to eliminate build warnings.
 
 ### Design decisions
-- 
-- 
-- 
+- Used `lastType` and `lastIsArray` instance fields to pass type information back up from child nodes, since the visitor interface returns void. This avoids changing the AbsynVisitor interface.
+- Tracked the current function's return type with `currentFunctionReturnType` so return statements can be validated against the enclosing function.
+- Used an ERROR base type for recovery: when a type error is found, ERROR is returned so parent nodes can skip redundant error messages and avoid cascading false positives.
+- Kept operator type rules close to the C- spec: arithmetic operators require int operands and produce int, relational operators require int and produce bool, equality accepts same-type operands and produces bool, logical operators accept bool or int and produce bool.
 
 ### Lessons learned
-- 
-- 
-- 
+- Propagating an ERROR type after the first error in a sub-expression prevents cascading duplicate messages.
+- Function prototypes (forward declarations) required special handling: replace the prototype symbol rather than reporting a redefinition error.
+- Array parameters declared as `int a[]` have size 0, so `isArray` is the reliable way to distinguish them from scalars, not the size field.
 
 ### Assumptions / limitations + improvement ideas
-- 
-- 
-- 
+- The type checker does not verify that every path through a non-void function has a return statement; it only checks that the return statements that exist have the correct type.
+- Logical operators (`&&`, `||`, `~`) accept both bool and int operands per the assignment spec; a stricter version could require bool only.
+- Void parameters (e.g., `int f(void)`) are handled at the grammar level and don't reach the type checker as actual parameter declarations.
+- A future improvement could add warnings for unused variables or unreachable code after return statements.
 
 ### Anything interesting you want to say?
-- 
-- 
+- The trickiest part was function call validation: checking arg count, each arg's type, and whether each arg is an array or scalar all at once, while still producing helpful error messages for each mismatch.
+- Seeing the type checker catch 10 different errors in 5.cm in a single pass and continue cleanly was a good sign that the error recovery approach works.

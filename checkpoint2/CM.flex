@@ -29,7 +29,6 @@ import java_cup.runtime.*;
 LineTerminator = \r|\n|\r\n
 WhiteSpace     = [ \t\f] | {LineTerminator}
 Digit          = [0-9]
-Letter         = [a-zA-Z]
 Identifier     = [_a-zA-Z]([_a-zA-Z0-9])*
 Number         = {Digit}+
 

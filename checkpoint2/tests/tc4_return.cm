@@ -1,0 +1,12 @@
+/*
+   Type-check 4: check function defs/calls for parameters and return types.
+   Expected errors: void function cannot return a value.
+*/
+
+void funtwo(void) {
+  int x;
+  x = 2;
+  return x;
+}
+
+void main(void) { }

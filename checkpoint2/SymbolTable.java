@@ -1,3 +1,10 @@
+/*
+  file name: SymbolTable.java
+  Name: Group 25 - Tameem Mughal, Richard, Muhammad Ali
+  Date: Mar 15 2026
+  Purpose: Symbol table implementation for semantic analysis. 
+*/
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -33,6 +40,8 @@ public class SymbolTable {
     // function info
     public final BaseType returnType;
     public final List<BaseType> paramTypes;
+    public final List<Boolean> paramIsArray;
+    public final boolean isPrototype;
 
     // declaration position
     public final int row;
@@ -46,6 +55,8 @@ public class SymbolTable {
         int arraySize,
         BaseType returnType,
         List<BaseType> paramTypes,
+        List<Boolean> paramIsArray,
+        boolean isPrototype,
         int row,
         int col) {
       this.name = name;
@@ -55,6 +66,8 @@ public class SymbolTable {
       this.arraySize = arraySize;
       this.returnType = returnType;
       this.paramTypes = paramTypes;
+      this.paramIsArray = paramIsArray;
+      this.isPrototype = isPrototype;
       this.row = row;
       this.col = col;
     }
@@ -75,6 +88,8 @@ public class SymbolTable {
           arraySize,
           null,
           null,
+          null,
+          false,
           row,
           col);
     }
@@ -83,6 +98,8 @@ public class SymbolTable {
         String name,
         BaseType returnType,
         List<BaseType> paramTypes,
+        List<Boolean> paramIsArray,
+        boolean isPrototype,
         int row,
         int col) {
       // baseType is the return type for convenience
@@ -94,8 +111,29 @@ public class SymbolTable {
           0,
           returnType,
           new ArrayList<>(paramTypes != null ? paramTypes : new ArrayList<>()),
+          paramIsArray != null ? new ArrayList<>(paramIsArray) : new ArrayList<>(),
+          isPrototype,
           row,
           col);
+    }
+
+    public static Symbol function(
+        String name,
+        BaseType returnType,
+        List<BaseType> paramTypes,
+        List<Boolean> paramIsArray,
+        int row,
+        int col) {
+      return function(name, returnType, paramTypes, paramIsArray, false, row, col);
+    }
+
+    public static Symbol function(
+        String name,
+        BaseType returnType,
+        List<BaseType> paramTypes,
+        int row,
+        int col) {
+      return function(name, returnType, paramTypes, new ArrayList<>(), false, row, col);
     }
   }
 
@@ -125,6 +163,12 @@ public class SymbolTable {
     }
     current.put(symbol.name, symbol);
     return true;
+  }
+
+  public void replace(Symbol symbol) {
+    if (!scopes.isEmpty()) {
+      scopes.peek().put(symbol.name, symbol);
+    }
   }
 
   public Symbol lookupCurrent(String name) {

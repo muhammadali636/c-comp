@@ -1,23 +1,29 @@
 /*
   file name: ShowTreeVisitor.java
   Name: Group 25 - Tameem Mughal, Richard, Muhammad Ali
-  Date: Feb 25 2026
+  Date: Mar 15 2026
   Purpose: visitor class that prints the AST as a hierarchical tree
 */
 
+import java.io.PrintWriter;
 import absyn.*;
 
 public class ShowTreeVisitor implements AbsynVisitor {
   static final int SPACES = 4;
+  private PrintWriter out;
+
+  public ShowTreeVisitor(PrintWriter out) {
+    this.out = out;
+  }
 
   private void indent(int level) {
     for (int i = 0; i < level * SPACES; i++)
-      System.out.print(" ");
+      out.print(" ");
   }
 
   public void visit(Program node, int level) {
     indent(level);
-    System.out.println("Program");
+    out.println("Program");
     if (node.declarations != null)
       node.declarations.accept(this, level + 1);
   }
@@ -49,36 +55,36 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit(NameTy node, int level) {
     indent(level);
     if (node.typ == NameTy.BOOL)
-      System.out.println("Type: bool");
+      out.println("Type: bool");
     else if (node.typ == NameTy.INT)
-      System.out.println("Type: int");
+      out.println("Type: int");
     else if (node.typ == NameTy.VOID)
-      System.out.println("Type: void");
+      out.println("Type: void");
   }
 
   public void visit(SimpleDec node, int level) {
     indent(level);
-    System.out.println("SimpleDec: " + node.name);
+    out.println("SimpleDec: " + node.name);
     node.typ.accept(this, level + 1);
   }
 
   public void visit(ArrayDec node, int level) {
     indent(level);
-    System.out.println("ArrayDec: " + node.name + "[" + node.size + "]");
+    out.println("ArrayDec: " + node.name + "[" + node.size + "]");
     node.typ.accept(this, level + 1);
   }
 
   public void visit(FunctionDec node, int level) {
     indent(level);
-    System.out.println("FunctionDec: " + node.func);
+    out.println("FunctionDec: " + node.func);
     node.result.accept(this, level + 1);
     if (node.params != null) {
       indent(level + 1);
-      System.out.println("Params:");
+      out.println("Params:");
       node.params.accept(this, level + 2);
     } else {
       indent(level + 1);
-      System.out.println("Params: void");
+      out.println("Params: void");
     }
     if (node.body != null)
       node.body.accept(this, level + 1);
@@ -89,12 +95,12 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit(IntExp node, int level) {
     indent(level);
-    System.out.println("IntExp: " + node.value);
+    out.println("IntExp: " + node.value);
   }
 
   public void visit(BoolExp node, int level) {
     indent(level);
-    System.out.println("BoolExp: " + node.value);
+    out.println("BoolExp: " + node.value);
   }
 
   public void visit(VarExp node, int level) {
@@ -104,10 +110,10 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit(CallExp node, int level) {
     indent(level);
-    System.out.println("CallExp: " + node.func);
+    out.println("CallExp: " + node.func);
     if (node.args != null) {
       indent(level + 1);
-      System.out.println("Args:");
+      out.println("Args:");
       node.args.accept(this, level + 2);
     }
   }
@@ -132,7 +138,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
       case OpExp.OR:     op = "||"; break;
       default:           op = "?"; break;
     }
-    System.out.println("OpExp: " + op);
+    out.println("OpExp: " + op);
     if (node.left != null)
       node.left.accept(this, level + 1);
     if (node.right != null)
@@ -141,7 +147,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit(AssignExp node, int level) {
     indent(level);
-    System.out.println("AssignExp:");
+    out.println("AssignExp:");
     if (node.lhs != null)
       node.lhs.accept(this, level + 1);
     if (node.rhs != null)
@@ -150,67 +156,67 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit(IfExp node, int level) {
     indent(level);
-    System.out.println("IfExp:");
+    out.println("IfExp:");
     indent(level + 1);
-    System.out.println("Test:");
+    out.println("Test:");
     if (node.test != null)
       node.test.accept(this, level + 2);
     indent(level + 1);
-    System.out.println("Then:");
+    out.println("Then:");
     if (node.thenpart != null)
       node.thenpart.accept(this, level + 2);
     if (node.elsepart != null && !(node.elsepart instanceof NilExp)) {
       indent(level + 1);
-      System.out.println("Else:");
+      out.println("Else:");
       node.elsepart.accept(this, level + 2);
     }
   }
 
   public void visit(WhileExp node, int level) {
     indent(level);
-    System.out.println("WhileExp:");
+    out.println("WhileExp:");
     indent(level + 1);
-    System.out.println("Test:");
+    out.println("Test:");
     if (node.test != null)
       node.test.accept(this, level + 2);
     indent(level + 1);
-    System.out.println("Body:");
+    out.println("Body:");
     if (node.body != null)
       node.body.accept(this, level + 2);
   }
 
   public void visit(ReturnExp node, int level) {
     indent(level);
-    System.out.println("ReturnExp:");
+    out.println("ReturnExp:");
     if (node.exp != null && !(node.exp instanceof NilExp))
       node.exp.accept(this, level + 1);
   }
 
   public void visit(CompoundExp node, int level) {
     indent(level);
-    System.out.println("CompoundExp:");
+    out.println("CompoundExp:");
     if (node.decs != null) {
       indent(level + 1);
-      System.out.println("LocalDecs:");
+      out.println("LocalDecs:");
       node.decs.accept(this, level + 2);
     }
     if (node.stmts != null) {
       indent(level + 1);
-      System.out.println("Statements:");
+      out.println("Statements:");
       node.stmts.accept(this, level + 2);
     }
   }
 
   public void visit(SimpleVar node, int level) {
     indent(level);
-    System.out.println("SimpleVar: " + node.name);
+    out.println("SimpleVar: " + node.name);
   }
 
   public void visit(IndexVar node, int level) {
     indent(level);
-    System.out.println("IndexVar: " + node.name);
+    out.println("IndexVar: " + node.name);
     indent(level + 1);
-    System.out.println("Index:");
+    out.println("Index:");
     if (node.index != null)
       node.index.accept(this, level + 2);
   }
