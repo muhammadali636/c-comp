@@ -86,26 +86,62 @@ Examples:
 ## TEST PLAN (Required 1.cm to 5.cm)
 All tests are in `tests/` and each file has a header comment describing expected errors.
 
-1.cm  Expected: no errors (syntax + semantics)
-   java -cp ".:lib/java-cup-11b-runtime.jar" CM -a -s tests/1.cm
+**Semantic pipeline sanity check**
+- **1.cm** — no semantic errors (valid program; builds AST + symbol tables + passes type checking)  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -a -s tests/1.cm`
 
-2.cm  Expected: semantic errors (<= 3) — undefined/redefined identifiers
-   java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/2.cm
+- **2.cm** — a few undefined/redefined identifiers  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/2.cm`
 
-3.cm  Expected: semantic errors (<= 3) — type mismatch / invalid operands / assignment checks
-   java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/3.cm
+- **3.cm** — type mismatch / invalid operands / bad assignments  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/3.cm`
 
-4.cm  Expected: semantic errors (<= 3) — function call/return errors, condition checks
-   java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/4.cm
+- **4.cm** — function call / return / condition errors  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/4.cm`
 
-5.cm  Expected: many mixed semantic errors (no limit)
-   java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/5.cm
+- **5.cm** — many mixed semantic errors (stress test)  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/5.cm`
+
+---
+
+## EXTRA TESTS (Symbol tables + Type checking)
+
+**Symbol table / scope behaviour**
+- `symtable_demo.cm` — no errors; symbol tables should show:
+  - global `int x`
+  - global `bool bbb[10]`
+  - function `void foo(void)`
+  
+  Run:  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -a -s tests/symtable_demo.cm`
+
+- `undef_redef.cm` — targeted undefined + redefined identifier demo  
+  - Expected: undefined `z`, redefined `y` in same scope  
+  
+  Run:  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/undef_redef.cm`
+
+**Type-checking focused tests**
+- `tc1_arrayindex.cm` — array index must be `int`  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/tc1_arrayindex.cm`
+
+- `tc2_assign.cm` — assignment compatibility (lvalue/rvalue types)  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/tc2_assign.cm`
+
+- `tc3_operands.cm` — operand types for unary/binary operators  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/tc3_operands.cm`
+
+- `tc4_return.cm` — return statements vs function return type  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/tc4_return.cm`
+
+- `tc5_condition.cm` — if/while condition type rules  
+  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -s tests/tc5_condition.cm`
 
 ---
 
 ## REFERENCE PROGRAMS (Marking checklist)
 We also tested with:
-fac.cm, booltest.cm, gcd.cm, sort.cm, mutual.cm
+`fac.cm`, `booltest.cm`, `gcd.cm`, `sort.cm`, `mutual.cm`
 
 These should parse and produce valid symbol tables and type checking output when the programs are correct.
 
