@@ -1,0 +1,48 @@
+/* 
+   file name: 0.cm
+   authors: group 25 - muhammad ali, tameem mughal, richard milovanov
+   Expected errors: missing semicolon after global array declaration, duplicate parameter name in printTwice, missing semicolon after output(x), void function returns a value, array used as scalar in calc, malformed if condition, incomplete expression temp = temp + ;, call to undefined function missingFunc, int function returns no value, redefined variable i in main, invalid void variable declaration, wrong argument count in call to calc, void function used as array index, use of undefined variable unknown, missing semicolon after limit = unknown + 4, malformed while condition, array used without index in output(values).
+   Purpose: heavy stress test for parser recovery and semantic analysis continuation.
+   date: mar 22 2026
+*/
+
+int values[3]
+int limit;
+
+void printTwice(int x, int x)
+{
+  output(x)
+  output(x);
+  return 1;
+}
+
+int calc(int n)
+{
+  int temp;
+  temp = values;
+  if ( )
+  {
+    temp = temp + ;
+  }
+  else
+  {
+    missingFunc(temp);
+  }
+  return;
+}
+
+void main(void)
+{
+  int i;
+  int i;
+  void bad;
+
+  i = calc();
+  values[printTwice(1, 2)] = 9;
+  limit = unknown + 4
+  while (i < )
+  {
+    i = i + 1;
+  }
+  output(values);
+}

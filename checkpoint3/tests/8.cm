@@ -1,0 +1,22 @@
+/* 
+   file name: 8.cm
+   authors: group 25 - muhammad ali, tameem mughal, richard milovanov
+   Expected errors: runtime out-of-bounds array access when scores[idx] is evaluated with idx = 4 for an array of size 3.
+   Purpose: test TM code generation and runtime bounds checking for indexed variables.
+   date: mar 22 2026
+*/
+
+void main(void)
+{
+  int scores[3];
+  int idx;
+
+  scores[0] = 10;
+  scores[1] = 20;
+  scores[2] = 30;
+
+  idx = 4;
+  scores[idx] = 99;
+
+  output(scores[0]);
+}

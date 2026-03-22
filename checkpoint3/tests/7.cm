@@ -1,0 +1,23 @@
+/* 
+   file name: 7.cm
+   authors: group 25 - muhammad ali, tameem mughal, richard milovanov
+   Expected errors: array grades assigned to scalar variable result, array grades passed as argument to doubleValue which expects an int.
+   Purpose: test semantic checks for array/scalar mismatches in expressions and function calls.
+   date: mar 22 2026
+*/
+
+int doubleValue(int x)
+{
+  return x + x;
+}
+
+void main(void)
+{
+  int grades[4];
+  int result;
+
+  result = grades;
+  result = doubleValue(grades);
+
+  output(result);
+}

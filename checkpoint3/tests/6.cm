@@ -1,0 +1,29 @@
+/* 
+   file name: 6.cm
+   authors: group 25 - muhammad ali, tameem mughal, richard milovanov
+   Expected errors: non-array variable count used as an array in count[1], void function call show(count) used as the condition of an if statement.
+   Purpose: test semantic checks for using a scalar variable like an array and using a void-returning function inside a condition.
+   date: mar 22 2026
+*/
+
+void show(int x)
+{
+  output(x);
+  return;
+}
+
+void main(void)
+{
+  int count;
+  int value;
+
+  count = 3;
+  value = count[1];
+
+  if (show(count))
+  {
+    value = 1;
+  }
+
+  output(value);
+}

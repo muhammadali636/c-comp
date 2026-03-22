@@ -11,14 +11,34 @@ Used to help make the final report. Please contribute after you finish your phas
 ## Muhammad — PHASE 1 (Wiring + `-c` + Tests + Coordination)
 
 ### What was done
+- Updated the driver to support the `-c` flag for code generation.
+- Connected code generation to run after parsing and semantic analysis.
+- Updated the Makefile to include code generation files.
+- Set up and checked the TM simulator workflow.
+- Expanded the tests from `1.cm`–`5.cm` to `1.cm`–`0.cm`.
+- Added headers to each test file with the purpose and expected errors or output.
+- Helped connect Phase 2 and Phase 3 work into the full compiler.
 
 ### Design decisions
+- Kept the command-line flags similar to earlier checkpoints by adding `-c` beside `-a` and `-s`.
+- Made code generation run only if parsing and semantic analysis both succeed.
+- Kept the test file format similar to Checkpoint 1 and 2.
+- Checked the build and run process on `linux.socs.uoguelph.ca`.
 
 ### Lessons learned
+- Adding the last compiler stage affects many files, not just one.
+- Checkpoint 3 needs more integration testing because programs must now run, not just parse and type-check.
+- Having a clear TM workflow helps a lot with debugging.
 
 ### Assumptions / limitations + improvement ideas
+- Some Phase 1 wiring may use placeholders until code generation is fully finished.
+- The README TM run instructions may need to be improved later.
+- More medium-sized valid test programs could be added later.
 
 ### Anything interesting you want to say?
+- Phase 1 was mostly about connecting `-c` into the compiler pipeline.
+- The main goal was making sure the full compiler works smoothly from input file to TM output file.
+- The test files became more important because now we need to check syntax, semantics, code generation, and runtime behavior.
 
 ---
 

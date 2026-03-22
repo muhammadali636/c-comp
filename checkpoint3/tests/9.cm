@@ -1,0 +1,39 @@
+/* 
+   file name: 9.cm
+   authors: group 25 - muhammad ali, tameem mughal, richard milovanov
+   Expected errors: void function g returns a value, redefined variable a in main, invalid void variable declaration for bad, use of undefined variable q, void function g used in assignment expression, wrong argument count in call f(1), array b passed where int is expected in call f(b, 2), array variable b assigned as a scalar, array b used without index in expression a = b, non-integer or invalid array index in b[true], call to undefined function unknown.
+   Purpose: stress test semantic analysis with many identifier, type, and call errors.
+   date: mar 22 2026
+*/
+
+int f(int x, int y)
+{
+  int z;
+  z = x + y;
+  return z;
+}
+
+void g(void)
+{
+  return 1;
+}
+
+int mainVar;
+
+void main(void)
+{
+  int a;
+  int a;
+  int b[2];
+  void bad;
+
+  a = q + 1;
+  mainVar = g();
+  a = f(1);
+  a = f(b, 2);
+  b = 3;
+  a = b;
+  a = b[true];
+  unknown(a, b);
+  output(a);
+}
