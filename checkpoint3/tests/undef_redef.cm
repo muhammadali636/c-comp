@@ -1,0 +1,11 @@
+/*
+   Symbol table demo: undefined and redefined variables.
+   Expected errors: undefined variable 'z', redefined identifier 'y'.
+*/
+
+void main(void) {
+  int y;
+  int y;
+
+  y = z + 1;
+}

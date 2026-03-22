@@ -1,0 +1,49 @@
+Used to help make the final report. Please contribute after you finish your phase.
+
+# Checkpoint 3 Report Notes (Team Draft)
+
+> Paste your notes under your section.
+> Keep it point-form and specific (features, files changed, tricky bugs, examples).
+> We will use this later to write the final report (PDF/Doc).
+
+---
+
+## Muhammad — PHASE 1 (Wiring + `-c` + Tests + Coordination)
+
+### What was done
+
+### Design decisions
+
+### Lessons learned
+
+### Assumptions / limitations + improvement ideas
+
+### Anything interesting you want to say?
+
+---
+
+## Richard — PHASE 2 (Runtime Layout + Code Generation Framework + Basic Expressions)
+
+### What was done
+
+### Design decisions
+
+### Lessons learned
+
+### Assumptions / limitations + improvement ideas
+
+### Anything interesting you want to say?
+
+---
+
+## Tamiyo — PHASE 3 (Control Flow + Functions + Arrays + Full Code Generation + Cleanup)
+
+### What was done
+
+### Design decisions
+
+### Lessons learned
+
+### Assumptions / limitations + improvement ideas
+
+### Anything interesting you want to say?

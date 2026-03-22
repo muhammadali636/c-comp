@@ -1,0 +1,16 @@
+/* 
+   file name: 2.cm
+   Authors: muhammad ali, tameem mughal, richard milovanov
+   Expected errors: undefined variable 'y', undefined function 'foo'.
+   Purpose: verify semantic analyzer reports use of undefined identifiers and calls to undefined functions.
+   Date: mar 11 2026
+*/
+
+void main(void) 
+{
+  int x;
+
+  x = y + 1;
+  foo(x);
+  output(x);
+}

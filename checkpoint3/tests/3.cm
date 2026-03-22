@@ -1,0 +1,26 @@
+/* 
+   file name: 3.cm
+   authors: group 25 - muhammad ali, tameem mughal, richard milovanov.
+   Expected errors: redefined variable 'x', redefined function 'helper'.
+   Purpose: verify semantic analyzer reports redefinitions in the same scope / duplicate declarations.
+   date: mar 11 2026
+*/
+
+int helper(int a)
+{
+  return a;
+}
+
+int helper(int b)
+{
+  return b + 1;
+}
+
+void main(void) 
+{
+  int x;
+  int x;
+
+  x = 1;
+  output(x);
+}

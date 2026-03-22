@@ -1,0 +1,23 @@
+/* 
+   file name: 4.cm
+   Expected errors: void function returns a value, int function returns no value.
+   Purpose: test semantic checks for incorrect return statements.
+   authors: group 25 - muhammad ali, tameem mughal, richard milovanov
+   date: mar 11 2026
+*/
+
+void badVoid(void) 
+{
+  return 5;
+}
+
+int badInt(void) 
+{
+  return;
+}
+
+void main(void) 
+{
+  badVoid();
+  output(0);
+}

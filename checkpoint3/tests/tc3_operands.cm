@@ -1,0 +1,12 @@
+/*
+   Type-check 3: check operands of binary/unary operations.
+   Expected errors: right operand of arithmetic operator must be int (x + foo() where foo is void).
+*/
+
+void foo(void) { }
+
+int fun(int fff) {
+  int x; int y;
+  x = x * 2 + 1;
+  y = x + foo();
+}

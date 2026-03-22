@@ -1,0 +1,151 @@
+# Checkpoint 3 Role Division (Group of 3)
+- This was written by AI and will not be submitted.
+
+## Muhammad — PHASE 1 (Wiring + `-c` + Tests + Coordination)
+
+### Main responsibility
+- Connect the new code generation stage into the compiler pipeline and make sure the whole project builds, runs, and is ready for submission.
+
+### Tasks
+- Update `CM.java` to support all required flags:
+  - `-a`
+  - `-s`
+  - `-c`
+- Make sure code generation only runs if parsing and semantic analysis both succeed.
+- Make sure combined options work properly:
+  - `-a`
+  - `-s`
+  - `-c`
+  - `-a -s`
+  - `-a -c`
+  - `-s -c`
+  - `-a -s -c`
+- Update the Makefile for any new code generation files.
+- Update the README with how to:
+  - build the compiler
+  - generate AST output
+  - generate symbol table output
+  - generate TM assembly
+  - run TM code on the simulator
+- Set up / verify the TM simulator workflow.
+- Expand the tests from `1.cm`–`5.cm` to `1.cm`–`0.cm`.
+- Add headers to all test files explaining:
+  - what feature is being tested
+  - whether the file should compile
+  - what errors are expected, if any
+- Make sure:
+  - `1.cm`–`3.cm` are valid runnable programs
+  - `4.cm`–`8.cm` contain syntax / semantic / runtime errors
+  - `9.cm` and `0.cm` are stress-test files
+- Verify the whole project on `linux.socs.uoguelph.ca`.
+- Help integrate Phase 2 and Phase 3 work into the final compiler.
+
+### Deliverables
+- Updated `CM.java`
+- Updated Makefile
+- Updated README
+- TM simulator workflow notes
+- Test files `1.cm`–`0.cm`
+- Final integration / submission support
+
+---
+
+## Richard — PHASE 2 (Runtime Layout + Code Generation Framework + Basic Expressions)
+
+### Main responsibility
+- Build the runtime model and core code generation framework that the rest of the compiler will use.
+
+### Tasks
+- Design the TM runtime environment.
+- Decide memory layout for:
+  - global variables
+  - local variables
+  - parameters
+  - arrays
+  - return address / frame data
+- Decide register usage.
+- Create the main code generation class, such as `CodeGenerator.java`.
+- Add helper methods for:
+  - emitting TM instructions
+  - comments
+  - skipping instruction locations
+  - backpatching jump targets
+- Implement symbol-to-memory offset handling.
+- Assign offsets for:
+  - globals
+  - locals
+  - parameters
+- Handle scalar variables and arrays in memory layout.
+- Generate TM code for:
+  - integer constants
+  - boolean constants
+  - variable access
+  - simple assignments
+  - arithmetic expressions
+  - relational expressions
+- Add program start / function skeleton logic.
+- Add built-in support for `input` and `output` if needed.
+- Help design runtime support for array bounds checking.
+
+### Deliverables
+- `CodeGenerator.java` and helper methods
+- Runtime/frame layout plan
+- Offset handling for declarations
+- Working code generation for basic expressions and assignments
+- Basic function/program skeleton
+
+---
+
+## Tameem — PHASE 3 (Control Flow + Functions + Arrays + Full Code Generation + Cleanup)
+
+### Main responsibility
+- Complete the remaining code generation features so the compiler can handle full valid C- programs and revisit earlier checkpoints if needed.
+
+### Tasks
+- Generate TM code for:
+  - `if`
+  - `if-else`
+  - `while`
+  - nested blocks
+- Implement branch logic and jump backpatching.
+- Generate TM code for function calls.
+- Handle:
+  - argument passing
+  - return values
+  - `return;`
+  - `return expression;`
+- Generate TM code for arrays:
+  - array access
+  - array assignment
+  - indexed expressions
+  - address calculation
+- Add runtime bounds checking for indexed variables.
+- Complete code generation for all remaining valid C- constructs.
+- Revisit semantic analysis if code generation exposes bugs.
+- Revisit parser recovery or cleanup if needed.
+- Help debug generated TM code on complex valid programs.
+- Help verify runtime error cases.
+
+### Deliverables
+- Working control-flow code generation
+- Working function-call / return generation
+- Working array code generation
+- Runtime bounds-check support
+- Full valid-program code generation coverage
+- Final cleanup of semantic / parser / codegen issues
+
+---
+REPORT lead by Muhammad after phase 3. Group effort, fill report.txt with design decisions and review.
+
+--- 
+## Short Summary
+
+### Muhammad
+- Driver, `-c`, Makefile, README, TM workflow, tests, integration, report lead
+
+### Richard
+- Runtime layout, memory offsets, code generation framework, expressions, assignments, function skeleton
+
+### Tameem
+- Control flow, function calls, arrays, bounds checks, full code generation, cleanup
+

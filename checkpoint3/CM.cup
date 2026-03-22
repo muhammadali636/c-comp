@@ -1,0 +1,454 @@
+/*
+   File name: CM.cup
+   Purpose: C- grammar with full AST construction and error recovery.
+*/
+
+import java_cup.runtime.*;
+import absyn.*;
+
+parser code {:
+  public boolean hasSyntaxErrors = false; // set true if any syntax error occurs
+
+  public void report_error(String message, Object info) {
+    hasSyntaxErrors = true; // syntax error happened
+    StringBuffer m = new StringBuffer("Syntax error");
+    if (info instanceof java_cup.runtime.Symbol) {
+      java_cup.runtime.Symbol s = (java_cup.runtime.Symbol) info;
+      if (s.left >= 0) {
+        m.append(" at line " + s.left);
+        if (s.right >= 0)
+          m.append(", column " + s.right);
+      }
+      if (s.value != null)
+        m.append(": found \"" + s.value + "\"");
+    }
+    System.err.println(m);
+  }
+
+  public void report_fatal_error(String message, Object info) {
+    hasSyntaxErrors = true; // fatal syntax error happened
+    report_error(message, info);
+    System.err.println("Fatal syntax error; cannot continue.");
+    try {
+      super.report_fatal_error(message, info); // actually abort parsing
+    } catch (Exception e) {
+      // Wrap checked exception so parser code still aborts cleanly
+      throw new RuntimeException(e);
+    }
+  }
+:};
+
+/* Terminals */
+terminal String ID;
+terminal Integer NUM;
+terminal Boolean TRUTH;
+terminal PLUS, MINUS, TIMES, DIVIDE;
+terminal LT, LE, GT, GE, EQ, NE;
+terminal NOT, OR, AND;
+terminal ASSIGN, SEMI, COMMA;
+terminal LBRACKET, RBRACKET, LPAREN, RPAREN, LBRACE, RBRACE;
+terminal BOOL, IF, ELSE, INT, VOID, RETURN, WHILE;
+terminal ERROR;
+
+/* Nonterminals with AST types */
+non terminal Program program;
+non terminal DecList declaration_list;
+non terminal Dec declaration;
+non terminal VarDec var_declaration;
+non terminal Dec fun_declaration;
+non terminal Dec fun_prototype;
+non terminal NameTy type_specifier;
+non terminal VarDecList params, param_list;
+non terminal VarDec param;
+non terminal CompoundExp compound_stmt;
+non terminal VarDecList local_declarations;
+non terminal ExpList statement_list;
+non terminal Exp statement;
+non terminal Exp expression_stmt, selection_stmt, iteration_stmt, return_stmt;
+non terminal Exp expression;
+non terminal Var var;
+non terminal Exp obool_expression, abool_expression, ubool_expression;
+non terminal Exp simple_expression, additive_expression, term, signed_factor, factor;
+non terminal Exp call;
+non terminal ExpList args, arg_list;
+
+/* Precedence (low to high) */
+precedence right ASSIGN;
+precedence left OR;
+precedence left AND;
+precedence nonassoc NOT;
+precedence nonassoc LT, LE, GT, GE, EQ, NE;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence nonassoc ELSE;
+
+start with program;
+
+/* ---- program ---- */
+
+program ::= declaration_list:dl
+  {: RESULT = new Program(dl); :}
+  ;
+
+/* ---- declaration list ---- */
+
+declaration_list ::= declaration_list:dl declaration:d
+  {: DecList t = dl;
+     while (t.tail != null) t = t.tail;
+     t.tail = new DecList(d, null);
+     RESULT = dl;
+  :}
+  ;
+declaration_list ::= declaration:d
+  {: RESULT = new DecList(d, null); :}
+  ;
+declaration_list ::= declaration_list:dl error SEMI
+  {: RESULT = dl; :}
+  ;
+declaration_list ::= error SEMI
+  {: RESULT = new DecList(null, null); :}
+  ;
+declaration_list ::= declaration_list:dl error RBRACE
+  {: RESULT = dl; :}
+  ;
+
+/* ---- declarations ---- */
+
+declaration ::= var_declaration:v
+  {: RESULT = v; :}
+  ;
+declaration ::= fun_declaration:f
+  {: RESULT = f; :}
+  ;
+declaration ::= fun_prototype:fp
+  {: RESULT = fp; :}
+  ;
+
+/* ---- variable declarations ---- */
+
+var_declaration ::= type_specifier:ts ID:n SEMI
+  {: RESULT = new SimpleDec(tsleft, tsright, ts, n); :}
+  ;
+var_declaration ::= type_specifier:ts ID:n LBRACKET NUM:sz RBRACKET SEMI
+  {: RESULT = new ArrayDec(tsleft, tsright, ts, n, sz); :}
+  ;
+
+/* ---- type specifier ---- */
+
+type_specifier ::= BOOL:t
+  {: RESULT = new NameTy(tleft, tright, NameTy.BOOL); :}
+  ;
+type_specifier ::= INT:t
+  {: RESULT = new NameTy(tleft, tright, NameTy.INT); :}
+  ;
+type_specifier ::= VOID:t
+  {: RESULT = new NameTy(tleft, tright, NameTy.VOID); :}
+  ;
+
+/* ---- function declaration ---- */
+
+fun_declaration ::= type_specifier:ts ID:n LPAREN params:pl RPAREN compound_stmt:cs
+  {: RESULT = new FunctionDec(tsleft, tsright, ts, n, pl, cs); :}
+  ;
+
+/* ---- function prototype ---- */
+
+fun_prototype ::= type_specifier:ts ID:n LPAREN params:pl RPAREN SEMI
+  {: RESULT = new FunctionDec(tsleft, tsright, ts, n, pl, null); :}
+  ;
+
+/* ---- params ---- */
+
+params ::= param_list:pl
+  {: RESULT = pl; :}
+  ;
+params ::= VOID
+  {: RESULT = null; :}
+  ;
+
+param_list ::= param_list:pl COMMA param:p
+  {: VarDecList t = pl;
+     while (t.tail != null) t = t.tail;
+     t.tail = new VarDecList(p, null);
+     RESULT = pl;
+  :}
+  ;
+param_list ::= param:p
+  {: RESULT = new VarDecList(p, null); :}
+  ;
+
+/* ---- param ---- */
+
+param ::= type_specifier:ts ID:n
+  {: RESULT = new SimpleDec(tsleft, tsright, ts, n); :}
+  ;
+param ::= type_specifier:ts ID:n LBRACKET RBRACKET
+  {: RESULT = new ArrayDec(tsleft, tsright, ts, n, 0); :}
+  ;
+
+/* ---- compound statement ---- */
+
+compound_stmt ::= LBRACE:lb local_declarations:ld statement_list:sl RBRACE
+  {: RESULT = new CompoundExp(lbleft, lbright, ld, sl); :}
+  ;
+
+/* ---- local declarations ---- */
+
+local_declarations ::= local_declarations:ldl var_declaration:vd
+  {: if (ldl == null) {
+       RESULT = new VarDecList(vd, null);
+     } else {
+       VarDecList t = ldl;
+       while (t.tail != null) t = t.tail;
+       t.tail = new VarDecList(vd, null);
+       RESULT = ldl;
+     }
+  :}
+  ;
+local_declarations ::= /* empty */
+  {: RESULT = null; :}
+  ;
+local_declarations ::= local_declarations:ldl error SEMI
+  {: RESULT = ldl; :}
+  ;
+
+/* ---- statement list ---- */
+
+statement_list ::= statement_list:sl statement:s
+  {: if (sl == null) {
+       RESULT = new ExpList(s, null);
+     } else {
+       ExpList t = sl;
+       while (t.tail != null) t = t.tail;
+       t.tail = new ExpList(s, null);
+       RESULT = sl;
+     }
+  :}
+  ;
+statement_list ::= /* empty */
+  {: RESULT = null; :}
+  ;
+
+/* ---- statements ---- */
+
+statement ::= expression_stmt:e
+  {: RESULT = e; :}
+  ;
+statement ::= compound_stmt:c
+  {: RESULT = c; :}
+  ;
+statement ::= selection_stmt:s
+  {: RESULT = s; :}
+  ;
+statement ::= iteration_stmt:i
+  {: RESULT = i; :}
+  ;
+statement ::= return_stmt:r
+  {: RESULT = r; :}
+  ;
+statement ::= error SEMI
+  {: RESULT = new NilExp(0, 0); :}
+  ;
+statement ::= error RBRACE
+  {: RESULT = new NilExp(0, 0); :}
+  ;
+
+/* ---- expression statement ---- */
+
+expression_stmt ::= expression:e SEMI
+  {: RESULT = e; :}
+  ;
+expression_stmt ::= SEMI
+  {: RESULT = new NilExp(0, 0); :}
+  ;
+
+/* ---- selection statement ---- */
+
+selection_stmt ::= IF:i LPAREN expression:e RPAREN statement:s1 ELSE statement:s2
+  {: RESULT = new IfExp(ileft, iright, e, s1, s2); :}
+  ;
+selection_stmt ::= IF:i LPAREN expression:e RPAREN statement:s
+  {: RESULT = new IfExp(ileft, iright, e, s, new NilExp(ileft, iright)); :}
+  ;
+selection_stmt ::= IF:i LPAREN error RPAREN statement:s1 ELSE statement:s2
+  {: RESULT = new IfExp(ileft, iright, new NilExp(ileft, iright), s1, s2); :}
+  ;
+selection_stmt ::= IF:i LPAREN error RPAREN statement:s
+  {: RESULT = new IfExp(ileft, iright, new NilExp(ileft, iright), s, new NilExp(ileft, iright)); :}
+  ;
+
+/* ---- iteration statement ---- */
+
+iteration_stmt ::= WHILE:w LPAREN expression:e RPAREN statement:s
+  {: RESULT = new WhileExp(wleft, wright, e, s); :}
+  ;
+iteration_stmt ::= WHILE:w LPAREN error RPAREN statement:s
+  {: RESULT = new WhileExp(wleft, wright, new NilExp(wleft, wright), s); :}
+  ;
+
+/* ---- return statement ---- */
+
+return_stmt ::= RETURN:r SEMI
+  {: RESULT = new ReturnExp(rleft, rright, new NilExp(rleft, rright)); :}
+  ;
+return_stmt ::= RETURN:r expression:e SEMI
+  {: RESULT = new ReturnExp(rleft, rright, e); :}
+  ;
+return_stmt ::= RETURN:r error SEMI
+  {: RESULT = new ReturnExp(rleft, rright, new NilExp(rleft, rright)); :}
+  ;
+
+/* ---- expressions ---- */
+
+expression ::= var:v ASSIGN expression:e
+  {: RESULT = new AssignExp(vleft, vright, new VarExp(vleft, vright, v), e); :}
+  ;
+expression ::= obool_expression:e
+  {: RESULT = e; :}
+  ;
+
+/* ---- var ---- */
+
+var ::= ID:n
+  {: RESULT = new SimpleVar(nleft, nright, n); :}
+  ;
+var ::= ID:n LBRACKET expression:e RBRACKET
+  {: RESULT = new IndexVar(nleft, nright, n, e); :}
+  ;
+
+/* ---- obool expression (||) ---- */
+
+obool_expression ::= obool_expression:e1 OR abool_expression:e2
+  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.OR, e2); :}
+  ;
+obool_expression ::= abool_expression:e
+  {: RESULT = e; :}
+  ;
+
+/* ---- abool expression (&&) ---- */
+
+abool_expression ::= abool_expression:e1 AND ubool_expression:e2
+  {: RESULT = new OpExp(e1left, e1right, e1, OpExp.AND, e2); :}
+  ;
+abool_expression ::= ubool_expression:e
+  {: RESULT = e; :}
+  ;
+
+/* ---- ubool expression (~) ---- */
+
+ubool_expression ::= NOT:n ubool_expression:e
+  {: RESULT = new OpExp(nleft, nright, e, OpExp.NOT, new NilExp(nleft, nright)); :}
+  ;
+ubool_expression ::= simple_expression:e
+  {: RESULT = e; :}
+  ;
+
+/* ---- simple expression ---- */
+
+simple_expression ::= additive_expression:a1 LT additive_expression:a2
+  {: RESULT = new OpExp(a1left, a1right, a1, OpExp.LT, a2); :}
+  ;
+simple_expression ::= additive_expression:a1 LE additive_expression:a2
+  {: RESULT = new OpExp(a1left, a1right, a1, OpExp.LE, a2); :}
+  ;
+simple_expression ::= additive_expression:a1 GT additive_expression:a2
+  {: RESULT = new OpExp(a1left, a1right, a1, OpExp.GT, a2); :}
+  ;
+simple_expression ::= additive_expression:a1 GE additive_expression:a2
+  {: RESULT = new OpExp(a1left, a1right, a1, OpExp.GE, a2); :}
+  ;
+simple_expression ::= additive_expression:a1 EQ additive_expression:a2
+  {: RESULT = new OpExp(a1left, a1right, a1, OpExp.EQ, a2); :}
+  ;
+simple_expression ::= additive_expression:a1 NE additive_expression:a2
+  {: RESULT = new OpExp(a1left, a1right, a1, OpExp.NE, a2); :}
+  ;
+simple_expression ::= additive_expression:a
+  {: RESULT = a; :}
+  ;
+
+/* ---- additive expression ---- */
+
+additive_expression ::= additive_expression:a PLUS term:t
+  {: RESULT = new OpExp(aleft, aright, a, OpExp.PLUS, t); :}
+  ;
+additive_expression ::= additive_expression:a MINUS term:t
+  {: RESULT = new OpExp(aleft, aright, a, OpExp.MINUS, t); :}
+  ;
+additive_expression ::= term:t
+  {: RESULT = t; :}
+  ;
+
+/* ---- term ---- */
+
+term ::= term:t TIMES signed_factor:f
+  {: RESULT = new OpExp(tleft, tright, t, OpExp.MUL, f); :}
+  ;
+term ::= term:t DIVIDE signed_factor:f
+  {: RESULT = new OpExp(tleft, tright, t, OpExp.DIV, f); :}
+  ;
+term ::= signed_factor:f
+  {: RESULT = f; :}
+  ;
+
+/* ---- signed factor (unary minus) ---- */
+
+signed_factor ::= MINUS:m signed_factor:f
+  {: RESULT = new OpExp(mleft, mright, new IntExp(mleft, mright, 0), OpExp.UMINUS, f); :}
+  ;
+signed_factor ::= factor:f
+  {: RESULT = f; :}
+  ;
+
+/* ---- factor ---- */
+
+factor ::= LPAREN expression:e RPAREN
+  {: RESULT = e; :}
+  ;
+factor ::= LPAREN error RPAREN
+  {: RESULT = new NilExp(0, 0); :}
+  ;
+factor ::= var:v
+  {: RESULT = new VarExp(vleft, vright, v); :}
+  ;
+factor ::= call:c
+  {: RESULT = c; :}
+  ;
+factor ::= NUM:n
+  {: RESULT = new IntExp(nleft, nright, n); :}
+  ;
+factor ::= TRUTH:t
+  {: RESULT = new BoolExp(tleft, tright, t); :}
+  ;
+factor ::= ERROR:e
+  {: RESULT = new NilExp(eleft, eright); :}
+  ;
+
+/* ---- call ---- */
+
+call ::= ID:n LPAREN args:a RPAREN
+  {: RESULT = new CallExp(nleft, nright, n, a); :}
+  ;
+
+/* ---- args ---- */
+
+args ::= arg_list:al
+  {: RESULT = al; :}
+  ;
+args ::= /* empty */
+  {: RESULT = null; :}
+  ;
+args ::= error
+  {: RESULT = null; :}
+  ;
+
+arg_list ::= arg_list:al COMMA expression:e
+  {: ExpList t = al;
+     while (t.tail != null) t = t.tail;
+     t.tail = new ExpList(e, null);
+     RESULT = al;
+  :}
+  ;
+arg_list ::= expression:e
+  {: RESULT = new ExpList(e, null); :}
+  ;
