@@ -8,50 +8,105 @@
 import java.io.*;
 import absyn.*;
 
-class CM {
+class CM 
+{
   // keep flag for showing the AST
   public static final boolean SHOW_TREE = true;
 
   // print usage for correct running
-  private static void usage() {
+  private static void usage() 
+  {
     System.err.println("Usage:");
     System.err.println("  java CM <file.cm>");
     System.err.println("  java CM -a <file.cm>");
     System.err.println("  java CM -s <file.cm>");
+    System.err.println("  java CM -c <file.cm>");
     System.err.println("  java CM -a -s <file.cm>");
     System.err.println("  java CM -s -a <file.cm>");
+    System.err.println("  java CM -a -c <file.cm>");
+    System.err.println("  java CM -c -a <file.cm>");
+    System.err.println("  java CM -s -c <file.cm>");
+    System.err.println("  java CM -c -s <file.cm>");
+    System.err.println("  java CM -a -s -c <file.cm>");
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) 
+  {
     boolean wantAst = false;
     boolean wantSym = false;
+    boolean wantCode = false;
     String file = null;
 
-    // parse args and allow -a and -s in any order
+    // parse args and allow -a, -s, and -c in any order
     if (args.length == 1) {
       file = args[0];
-    } else if (args.length == 2) {
-      if (args[0].equals("-a")) {
+    } 
+    else if (args.length == 2) 
+    {
+      if (args[0].equals("-a")) 
+      {
         wantAst = true;
         file = args[1];
-      } else if (args[0].equals("-s")) {
+      } 
+      else if (args[0].equals("-s")) 
+      {
         wantSym = true;
         file = args[1];
-      } else {
+      } 
+      else if (args[0].equals("-c")) 
+      {
+        wantCode = true;
+        file = args[1];
+      } 
+      else 
+      {
         usage();
         System.exit(1);
       }
-    } else if (args.length == 3) {
-      if ((args[0].equals("-a") && args[1].equals("-s")) ||
-          (args[0].equals("-s") && args[1].equals("-a"))) {
+    } 
+    else if (args.length == 3) 
+    {
+      if ((args[0].equals("-a") && args[1].equals("-s")) || (args[0].equals("-s") && args[1].equals("-a"))) 
+      {
         wantAst = true;
         wantSym = true;
+        file = args[2];
+      } 
+      else if ((args[0].equals("-a") && args[1].equals("-c")) || (args[0].equals("-c") && args[1].equals("-a"))) 
+      {
+        wantAst = true;
+        wantCode = true;
+        file = args[2];
+      } 
+      else if ((args[0].equals("-s") && args[1].equals("-c")) || (args[0].equals("-c") && args[1].equals("-s"))) 
+      {
+        wantSym = true;
+        wantCode = true;
         file = args[2];
       } else {
         usage();
         System.exit(1);
       }
-    } else {
+    } 
+    else if (args.length == 4) 
+    {
+      if ((args[0].equals("-a") && args[1].equals("-s") && args[2].equals("-c")) ||
+          (args[0].equals("-a") && args[1].equals("-c") && args[2].equals("-s")) ||
+          (args[0].equals("-s") && args[1].equals("-a") && args[2].equals("-c")) ||
+          (args[0].equals("-s") && args[1].equals("-c") && args[2].equals("-a")) ||
+          (args[0].equals("-c") && args[1].equals("-a") && args[2].equals("-s")) ||
+          (args[0].equals("-c") && args[1].equals("-s") && args[2].equals("-a"))) {
+        wantAst = true;
+        wantSym = true;
+        wantCode = true;
+        file = args[3];
+      } 
+      else {
+        usage();
+        System.exit(1);
+      }
+    } 
+    else {
       usage();
       System.exit(1);
     }
@@ -62,7 +117,8 @@ class CM {
       // parser should return AST root in parse().value
       java_cup.runtime.Symbol result = p.parse();
 
-      if (result == null || result.value == null) {
+      if (result == null || result.value == null) 
+      {
         System.err.println("Parsing failed — no AST produced.");
         System.exit(1);
       }
@@ -77,7 +133,8 @@ class CM {
       // collect symbol table output if -s was requested
       StringWriter symBuffer = null;
       PrintWriter symWriter = null;
-      if (wantSym) {
+      if (wantSym) 
+      {
         symBuffer = new StringWriter();
         symWriter = new PrintWriter(symBuffer);
       }
@@ -91,13 +148,14 @@ class CM {
         symWriter.flush();
       }
 
-      // if semantic errors happened, do not write .ast or .sym files
+      // if semantic errors happened, do not write .ast, .sym, or .tm files
       if (!semanticOk) {
         System.exit(2);
       }
 
       // write AST to file only when fully valid (syntax + semantics)
-      if (wantAst && SHOW_TREE) {
+      if (wantAst && SHOW_TREE) 
+      {
         String astOut = file + ".ast";
         try (PrintWriter out = new PrintWriter(new FileWriter(astOut))) {
           ShowTreeVisitor v = new ShowTreeVisitor(out);
@@ -106,13 +164,26 @@ class CM {
       }
 
       // write symbol tables to file only when fully valid (syntax + semantics)
-      if (wantSym) {
+      if (wantSym) 
+      {
         String symOut = file + ".sym";
         try (PrintWriter out = new PrintWriter(new FileWriter(symOut))) {
           out.write(symBuffer.toString());
         }
       }
-    } catch (Exception e) {
+
+      // write TM code to file only when fully valid (syntax + semantics)
+      if (wantCode) 
+      {
+        String tmOut = file + ".tm";
+        try (PrintWriter out = new PrintWriter(new FileWriter(tmOut))) {
+          CodeGenerator cg = new CodeGenerator(out);
+          cg.generate(ast, st);
+        }
+      }
+    } 
+    catch (Exception e) 
+    {
       System.err.println("Error: " + e.getMessage());
       e.printStackTrace(System.err);
       System.exit(1);
