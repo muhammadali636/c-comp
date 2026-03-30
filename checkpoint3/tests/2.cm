@@ -1,16 +1,31 @@
-/* 
-   file name: 2.cm
-   Authors: muhammad ali, tameem mughal, richard milovanov
-   Expected errors: undefined variable 'y', undefined function 'foo'.
-   Purpose: verify semantic analyzer reports use of undefined identifiers and calls to undefined functions.
-   Date: mar 11 2026
+/*
+   Test 2.cm - Medium: functions, recursion, if-else, while loops
+   Authors: Group 25 - Muhammad Ali, Muhammad Tameem Mughal, Richard Milovanov
+   Complexity: Medium
+   Errors: None - compiles and runs correctly on the TM simulator.
+   Expected behavior: Reads a non-negative integer n and outputs the nth
+                      Fibonacci number using a recursive helper function
+                      and a while-loop driver.
 */
 
-void main(void) 
+int fib(int n)
 {
-  int x;
+  if (n <= 1)
+    return n;
+  else
+    return fib(n - 1) + fib(n - 2);
+}
 
-  x = y + 1;
-  foo(x);
-  output(x);
+void main(void)
+{
+  int n;
+  int i;
+
+  n = input();
+  i = 0;
+  while (i <= n)
+  {
+    output(fib(i));
+    i = i + 1;
+  }
 }

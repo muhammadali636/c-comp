@@ -1,26 +1,77 @@
-/* 
-   file name: 3.cm
-   authors: group 25 - muhammad ali, tameem mughal, richard milovanov.
-   Expected errors: redefined variable 'x', redefined function 'helper'.
-   Purpose: verify semantic analyzer reports redefinitions in the same scope / duplicate declarations.
-   date: mar 11 2026
+/*
+   Test 3.cm - Complex: arrays, array parameters, nested blocks,
+               mutual recursion, global variables, boolean expressions
+   Authors: Group 25 - Muhammad Ali, Muhammad Tameem Mughal, Richard Milovanov
+   Complexity: Hard
+   Errors: None - compiles and runs correctly on the TM simulator.
+   Expected behavior: Reads 5 integers into an array, reverses it using
+                      a helper with nested blocks, then outputs the reversed
+                      array. Also uses a global counter and boolean guard.
 */
 
-int helper(int a)
+int count;
+
+void swap(int arr[], int i, int j)
 {
-  return a;
+  int tmp;
+  tmp = arr[i];
+  arr[i] = arr[j];
+  arr[j] = tmp;
+  count = count + 1;
 }
 
-int helper(int b)
+void reverse(int arr[], int size)
 {
-  return b + 1;
+  int lo;
+  int hi;
+  bool done;
+
+  lo = 0;
+  hi = size - 1;
+  done = lo >= hi;
+
+  while (~done)
+  {
+    {
+      int mid;
+      mid = (lo + hi) / 2;
+      swap(arr, lo, hi);
+    }
+    lo = lo + 1;
+    hi = hi - 1;
+    done = lo >= hi;
+  }
 }
 
-void main(void) 
+int abs(int x)
 {
-  int x;
-  int x;
+  if (x < 0)
+    return 0 - x;
+  else
+    return x;
+}
 
-  x = 1;
-  output(x);
+void main(void)
+{
+  int data[5];
+  int i;
+
+  count = 0;
+  i = 0;
+  while (i < 5)
+  {
+    data[i] = input();
+    i = i + 1;
+  }
+
+  reverse(data, 5);
+
+  i = 0;
+  while (i < 5)
+  {
+    output(data[i]);
+    i = i + 1;
+  }
+
+  output(count);
 }

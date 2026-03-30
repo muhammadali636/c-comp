@@ -17,9 +17,8 @@
     FP - 2   = first parameter      (initFO)
     FP - 3   = second parameter
     ...
-    FP - 2 - numParams       = first local
-    ...
-    frameOffset              = next free slot (used for temps)
+    After params: local variables
+    After locals: temporaries
 
   Globals are stored at offsets 0, -1, -2, ... from GP.
 */
@@ -49,8 +48,12 @@ public class CodeGenerator implements AbsynVisitor {
   private int mainEntry = -1;
   private boolean inGlobalScope = true;
 
+  private int inputEntry;
+  private int outputEntry;
+
   private Deque<Map<String, VarInfo>> scopeStack = new ArrayDeque<>();
   private Map<String, Integer> funEntries = new HashMap<>();
+  private Map<String, List<Integer>> forwardPatches = new HashMap<>();
 
   private static class VarInfo {
     int offset;
@@ -137,15 +140,8 @@ public class CodeGenerator implements AbsynVisitor {
     return null;
   }
 
-  private int countArgs(ExpList args) {
-    int n = 0;
-    ExpList a = args;
-    while (a != null && a.head != null) { n++; a = a.tail; }
-    return n;
-  }
-
   /* ================================================================
-     Main entry point
+     Main entry point - generate()
      ================================================================ */
 
   public void generate(Absyn ast, SymbolTable st) {
@@ -153,14 +149,37 @@ public class CodeGenerator implements AbsynVisitor {
 
     emitComment("C- Compilation to TM Code");
 
+    /* --- Standard prelude --- */
     emitComment("Standard prelude:");
     emitRM("LD", GP, 0, AC, "load gp with maxaddress");
-    int fpPatch = emitSkip(1);
+    emitRM("LDA", FP, 0, GP, "copy gp to fp");
     emitRM("ST", AC, 0, AC, "clear location 0");
+    emitComment("Jump around i/o routines here");
+    int savedLoc = emitSkip(1);
 
-    int jumpPatch = emitSkip(1);
+    /* input routine */
+    emitComment("code for input routine");
+    inputEntry = emitSkip(0);
+    emitRM("ST", AC, retFO, FP, "store return");
+    emitRO("IN", AC, 0, 0, "input");
+    emitRM("LD", PC, retFO, FP, "return to caller");
+
+    /* output routine */
+    emitComment("code for output routine");
+    outputEntry = emitSkip(0);
+    emitRM("ST", AC, retFO, FP, "store return");
+    emitRM("LD", AC, initFO, FP, "load output value");
+    emitRO("OUT", AC, 0, 0, "output");
+    emitRM("LD", PC, retFO, FP, "return to caller");
+
+    /* backpatch jump around i/o */
+    int afterIO = emitSkip(0);
+    emitBackup(savedLoc);
+    emitRM_Abs("LDA", PC, afterIO, "jump around i/o code");
+    emitRestore();
     emitComment("End of standard prelude.");
 
+    /* --- Process all declarations --- */
     cgenEnterScope();
     inGlobalScope = true;
 
@@ -174,22 +193,70 @@ public class CodeGenerator implements AbsynVisitor {
 
     cgenExitScope();
 
-    int endLoc = emitSkip(0);
-    emitBackup(fpPatch);
-    emitRM("LDA", FP, globalOffset, GP, "init fp past globals");
-    emitRestore();
-
-    emitBackup(jumpPatch);
+    /* --- Finale: call main --- */
     if (mainEntry >= 0) {
-      emitRM("ST", FP, ofpFO, FP, "push ofp (prelude)");
-      emitRestore();
-      emitRM("LDA", AC, 1, PC, "load return addr");
-      emitRM_Abs("LDA", PC, mainEntry, "jmp to main");
+      emitRM("ST", FP, globalOffset, FP, "push ofp");
+      emitRM("LDA", FP, globalOffset, FP, "push frame");
+      emitRM("LDA", AC, 1, PC, "load ac with ret ptr");
+      emitRM_Abs("LDA", PC, mainEntry, "jump to main loc");
+      emitRM("LD", FP, ofpFO, FP, "pop frame");
+    }
+    emitComment("End of execution.");
+    emitRO("HALT", 0, 0, 0, "");
+  }
+
+  /* ================================================================
+     Array access helper
+     Computes array element address (and optionally loads value).
+     ================================================================ */
+
+  private void emitArrayAccess(String name, Exp index, boolean loadValue, int level) {
+    VarInfo info = lookupVar(name);
+    if (info == null) return;
+
+    int base = info.isGlobal ? GP : FP;
+
+    /* load array base address */
+    if (info.isParamArray) {
+      emitRM("LD", AC, info.offset, base, "load id value");
     } else {
-      emitRestore();
+      emitRM("LDA", AC, info.offset, base, "load id address");
+    }
+    int tmpOff = frameOffset;
+    frameOffset--;
+    emitRM("ST", AC, tmpOff, FP, "store array addr");
+
+    /* evaluate index expression */
+    if (index != null) index.accept(this, level);
+
+    /* bounds check - lower bound (index < 0) */
+    emitRM("JLT", AC, 1, PC, "halt if subscript < 0");
+    emitRM("LDA", PC, 1, PC, "absolute jump if not");
+    emitRO("HALT", 0, 0, 0, "halt if subscript < 0");
+
+    /* bounds check - upper bound (index >= size), only for known-size arrays */
+    if (!info.isParamArray && info.arraySize > 0) {
+      int tmpOff2 = frameOffset;
+      frameOffset--;
+      emitRM("ST", AC, tmpOff2, FP, "save index for bound check");
+      emitRM("LDC", AC1, info.arraySize, 0, "load array size");
+      emitRO("SUB", AC, AC, AC1, "index - size");
+      emitRM("JGE", AC, 1, PC, "halt if index >= size");
+      emitRM("LDA", PC, 1, PC, "skip halt");
+      emitRO("HALT", 0, 0, 0, "index out of range");
+      emitRM("LD", AC, tmpOff2, FP, "restore index");
+      frameOffset++;
     }
 
-    emitRO("HALT", 0, 0, 0, "");
+    /* compute element address: base - index */
+    emitRM("LD", AC1, tmpOff, FP, "load array base addr");
+    frameOffset++;
+    emitRO("SUB", AC, AC1, AC, "base is at top of array");
+
+    /* optionally load value at computed address */
+    if (loadValue) {
+      emitRM("LD", AC, 0, AC, "load value at array index");
+    }
   }
 
   /* ================================================================
@@ -230,12 +297,17 @@ public class CodeGenerator implements AbsynVisitor {
   public void visit(NameTy node, int level) {
   }
 
+  /* --- Variable declarations --- */
+
   @Override
   public void visit(SimpleDec node, int level) {
     if (inGlobalScope) {
+      emitComment("allocating global var: " + node.name);
       addVar(node.name, new VarInfo(globalOffset, true, false, 0, false));
       globalOffset--;
+      emitComment("<- vardecl");
     } else {
+      emitComment("processing local var: " + node.name);
       addVar(node.name, new VarInfo(frameOffset, false, false, 0, false));
       frameOffset--;
     }
@@ -243,31 +315,52 @@ public class CodeGenerator implements AbsynVisitor {
 
   @Override
   public void visit(ArrayDec node, int level) {
+    int size = node.size > 0 ? node.size : 1;
     if (inGlobalScope) {
+      emitComment("allocating global var: " + node.name);
       addVar(node.name, new VarInfo(globalOffset, true, true, node.size, false));
-      globalOffset -= (node.size > 0 ? node.size : 1);
+      globalOffset -= size;
+      emitComment("<- vardecl");
     } else {
+      emitComment("processing local var: " + node.name);
       addVar(node.name, new VarInfo(frameOffset, false, true, node.size, false));
-      frameOffset -= (node.size > 0 ? node.size : 1);
+      frameOffset -= size;
     }
   }
 
+  /* --- Function declarations --- */
+
   @Override
   public void visit(FunctionDec node, int level) {
-    if (node.body == null) return;
+    if (node.body == null) return; /* prototype -- skip code generation */
+
+    emitComment("processing function: " + node.func);
+    emitComment("jump around function body here");
+    int jumpAroundLoc = emitSkip(1);
 
     int funcEntry = emitSkip(0);
     funEntries.put(node.func, funcEntry);
     if (node.func.equals("main")) mainEntry = funcEntry;
 
-    emitComment("-> function " + node.func);
-    emitRM("ST", AC, retFO, FP, "save return addr");
+    /* backpatch any forward references to this function */
+    List<Integer> patches = forwardPatches.remove(node.func);
+    if (patches != null) {
+      for (int loc : patches) {
+        emitBackup(loc);
+        emitRM_Abs("LDA", PC, funcEntry, "jump to fun loc");
+        emitRestore();
+      }
+    }
 
+    emitRM("ST", AC, retFO, FP, "store return");
+
+    /* set up scope and frame for this function */
     cgenEnterScope();
     boolean savedGlobal = inGlobalScope;
     inGlobalScope = false;
     frameOffset = initFO;
 
+    /* process parameters */
     VarDecList params = node.params;
     while (params != null && params.head != null) {
       VarDec vd = params.head;
@@ -282,6 +375,7 @@ public class CodeGenerator implements AbsynVisitor {
       params = params.tail;
     }
 
+    /* process function body */
     if (node.body != null)
       node.body.accept(this, level + 1);
 
@@ -290,8 +384,15 @@ public class CodeGenerator implements AbsynVisitor {
     cgenExitScope();
     inGlobalScope = savedGlobal;
 
-    emitComment("<- function " + node.func);
+    /* backpatch jump around function body */
+    int afterFunc = emitSkip(0);
+    emitBackup(jumpAroundLoc);
+    emitRM_Abs("LDA", PC, afterFunc, "jump around fn body");
+    emitRestore();
+    emitComment("<- fundecl");
   }
+
+  /* --- Literals --- */
 
   @Override
   public void visit(NilExp node, int level) {
@@ -299,13 +400,19 @@ public class CodeGenerator implements AbsynVisitor {
 
   @Override
   public void visit(IntExp node, int level) {
-    emitRM("LDC", AC, node.value, 0, "load const " + node.value);
+    emitComment("-> constant");
+    emitRM("LDC", AC, node.value, 0, "load const");
+    emitComment("<- constant");
   }
 
   @Override
   public void visit(BoolExp node, int level) {
-    emitRM("LDC", AC, node.value ? 1 : 0, 0, "load bool " + node.value);
+    emitComment("-> constant");
+    emitRM("LDC", AC, node.value ? 1 : 0, 0, "load const");
+    emitComment("<- constant");
   }
+
+  /* --- Variable access (expressions / RHS) --- */
 
   @Override
   public void visit(VarExp node, int level) {
@@ -317,14 +424,24 @@ public class CodeGenerator implements AbsynVisitor {
   public void visit(SimpleVar node, int level) {
     VarInfo info = lookupVar(node.name);
     if (info == null) return;
+
+    emitComment("-> id");
+    emitComment("looking up id: " + node.name);
+
     int base = info.isGlobal ? GP : FP;
+
     if (info.isArray && !info.isParamArray) {
-      emitRM("LDA", AC, info.offset, base, "load addr of " + node.name);
+      /* local/global array: load base address for passing */
+      emitRM("LDA", AC, info.offset, base, "load id address");
     } else if (info.isParamArray) {
-      emitRM("LD", AC, info.offset, base, "load param array addr " + node.name);
+      /* param array: load stored pointer */
+      emitRM("LD", AC, info.offset, base, "load id value");
     } else {
-      emitRM("LD", AC, info.offset, base, "load " + node.name);
+      /* scalar: load value */
+      emitRM("LD", AC, info.offset, base, "load id value");
     }
+
+    emitComment("<- id");
   }
 
   @Override
@@ -332,74 +449,79 @@ public class CodeGenerator implements AbsynVisitor {
     VarInfo info = lookupVar(node.name);
     if (info == null) return;
 
-    if (node.index != null) node.index.accept(this, level);
-
-    int tmpOff = frameOffset;
-    frameOffset--;
-    emitRM("ST", AC, tmpOff, FP, "push index");
-
-    int base = info.isGlobal ? GP : FP;
-    if (info.isParamArray) {
-      emitRM("LD", AC, info.offset, base, "load param array base " + node.name);
-    } else {
-      emitRM("LDA", AC, info.offset, base, "load array base " + node.name);
-    }
-
-    emitRM("LD", AC1, tmpOff, FP, "pop index");
-    frameOffset++;
-
-    emitRO("SUB", AC, AC, AC1, "compute element addr");
-    emitRM("LD", AC, 0, AC, "load array element");
+    emitComment("-> subs");
+    emitArrayAccess(node.name, node.index, true, level);
+    emitComment("<- subs");
   }
+
+  /* --- Assignments --- */
 
   @Override
   public void visit(AssignExp node, int level) {
-    if (node.rhs != null) node.rhs.accept(this, level);
+    if (node.lhs == null || node.lhs.variable == null) return;
 
-    if (node.lhs != null && node.lhs.variable != null) {
-      Var v = node.lhs.variable;
-      if (v instanceof SimpleVar) {
-        SimpleVar sv = (SimpleVar) v;
-        VarInfo info = lookupVar(sv.name);
-        if (info != null) {
-          int base = info.isGlobal ? GP : FP;
-          emitRM("ST", AC, info.offset, base, "assign: " + sv.name + " =");
-        }
-      } else if (v instanceof IndexVar) {
-        IndexVar iv = (IndexVar) v;
-        VarInfo info = lookupVar(iv.name);
-        if (info != null) {
-          int tmpOff = frameOffset;
-          frameOffset--;
-          emitRM("ST", AC, tmpOff, FP, "assign: save rhs");
+    Var v = node.lhs.variable;
 
-          if (iv.index != null) iv.index.accept(this, level);
+    emitComment("-> op");
 
-          int tmpOff2 = frameOffset;
-          frameOffset--;
-          emitRM("ST", AC, tmpOff2, FP, "assign: save index");
+    if (v instanceof SimpleVar) {
+      SimpleVar sv = (SimpleVar) v;
+      VarInfo info = lookupVar(sv.name);
+      if (info == null) { emitComment("<- op"); return; }
 
-          int base = info.isGlobal ? GP : FP;
-          if (info.isParamArray) {
-            emitRM("LD", AC, info.offset, base, "assign: load param array base");
-          } else {
-            emitRM("LDA", AC, info.offset, base, "assign: load array base");
-          }
+      int base = info.isGlobal ? GP : FP;
 
-          emitRM("LD", AC1, tmpOff2, FP, "assign: load index");
-          frameOffset++;
-          emitRO("SUB", AC, AC, AC1, "assign: compute element addr");
+      /* load ADDRESS of LHS */
+      emitComment("-> id");
+      emitComment("looking up id: " + sv.name);
+      emitRM("LDA", AC, info.offset, base, "load id address");
+      emitComment("<- id");
 
-          emitRM("LD", AC1, tmpOff, FP, "assign: load rhs");
-          frameOffset++;
-          emitRM("ST", AC1, 0, AC, "assign: store to array element");
-        }
-      }
+      int tmpOff = frameOffset;
+      frameOffset--;
+      emitRM("ST", AC, tmpOff, FP, "op: push left");
+
+      /* evaluate RHS */
+      if (node.rhs != null) node.rhs.accept(this, level);
+
+      /* store value at address */
+      emitRM("LD", AC1, tmpOff, FP, "op: load left");
+      frameOffset++;
+      emitRM("ST", AC, 0, AC1, "assign: store value");
+
+    } else if (v instanceof IndexVar) {
+      IndexVar iv = (IndexVar) v;
+      VarInfo info = lookupVar(iv.name);
+      if (info == null) { emitComment("<- op"); return; }
+
+      /* compute ADDRESS of array element (no value load) */
+      emitComment("-> subs");
+      emitArrayAccess(iv.name, iv.index, false, level);
+      emitComment("<- subs");
+
+      int tmpOff = frameOffset;
+      frameOffset--;
+      emitRM("ST", AC, tmpOff, FP, "op: push left");
+
+      /* evaluate RHS */
+      if (node.rhs != null) node.rhs.accept(this, level);
+
+      /* store value at address */
+      emitRM("LD", AC1, tmpOff, FP, "op: load left");
+      frameOffset++;
+      emitRM("ST", AC, 0, AC1, "assign: store value");
     }
+
+    emitComment("<- op");
   }
+
+  /* --- Binary / unary operators --- */
 
   @Override
   public void visit(OpExp node, int level) {
+    emitComment("-> op");
+
+    /* unary NOT (~) */
     if (node.op == OpExp.NOT) {
       if (node.left != null) node.left.accept(this, level);
       int jmpTrue = emitSkip(1);
@@ -413,16 +535,20 @@ public class CodeGenerator implements AbsynVisitor {
       emitBackup(jmpEnd);
       emitRM_Abs("LDA", PC, endLoc, "not: skip");
       emitRestore();
+      emitComment("<- op");
       return;
     }
 
+    /* unary MINUS */
     if (node.op == OpExp.UMINUS) {
       if (node.right != null) node.right.accept(this, level);
       emitRM("LDC", AC1, 0, 0, "load 0");
       emitRO("SUB", AC, AC1, AC, "uminus: 0 - val");
+      emitComment("<- op");
       return;
     }
 
+    /* binary operators: evaluate left, push, evaluate right, operate */
     if (node.left != null) node.left.accept(this, level);
     int tmpOff = frameOffset;
     frameOffset--;
@@ -506,6 +632,8 @@ public class CodeGenerator implements AbsynVisitor {
       default:
         break;
     }
+
+    emitComment("<- op");
   }
 
   private void genRelJump(String jmpOp) {
@@ -518,105 +646,153 @@ public class CodeGenerator implements AbsynVisitor {
     emitBackup(jmpTrue);
     emitRM_Abs(jmpOp, AC, trueLoc, "br if true");
     emitBackup(jmpEnd);
-    emitRM_Abs("LDA", PC, endLoc, "br to end");
+    emitRM_Abs("LDA", PC, endLoc, "unconditional jmp");
     emitRestore();
   }
 
+  /* --- Function calls --- */
+
   @Override
   public void visit(CallExp node, int level) {
-    if (node.func.equals("input")) {
-      emitRO("IN", AC, 0, 0, "input()");
-      return;
+    emitComment("-> call of function: " + node.func);
+
+    boolean isInput = node.func.equals("input");
+    boolean isOutput = node.func.equals("output");
+
+    /* determine entry point */
+    int entry;
+    boolean isForward = false;
+
+    if (isInput) {
+      entry = inputEntry;
+    } else if (isOutput) {
+      entry = outputEntry;
+    } else {
+      Integer e = funEntries.get(node.func);
+      if (e != null) {
+        entry = e;
+      } else {
+        entry = 0; /* placeholder for forward reference */
+        isForward = true;
+      }
     }
 
-    if (node.func.equals("output")) {
-      if (node.args != null && node.args.head != null)
-        node.args.head.accept(this, level);
-      emitRO("OUT", AC, 0, 0, "output()");
-      return;
-    }
-
-    Integer entry = funEntries.get(node.func);
-    if (entry == null) return;
-
+    /* evaluate and store arguments */
     int argIdx = 0;
     ExpList arg = node.args;
     while (arg != null && arg.head != null) {
       arg.head.accept(this, level);
-      emitRM("ST", AC, frameOffset + initFO - argIdx, FP, "store arg " + argIdx);
+      emitRM("ST", AC, frameOffset + initFO - argIdx, FP, "store arg val");
       argIdx++;
       arg = arg.tail;
     }
 
+    /* standard call convention */
     emitRM("ST", FP, frameOffset + ofpFO, FP, "push ofp");
     emitRM("LDA", FP, frameOffset, FP, "push frame");
-    emitRM("LDA", AC, 1, PC, "load ret addr");
-    emitRM_Abs("LDA", PC, entry, "jmp to " + node.func);
+    emitRM("LDA", AC, 1, PC, "load ac with ret ptr");
+    int jumpLoc = emitSkip(0);
+    emitRM_Abs("LDA", PC, entry, "jump to fun loc");
     emitRM("LD", FP, ofpFO, FP, "pop frame");
+
+    /* record forward reference for backpatching */
+    if (isForward) {
+      forwardPatches.computeIfAbsent(node.func, k -> new ArrayList<>()).add(jumpLoc);
+    }
+
+    emitComment("<- call");
   }
+
+  /* --- Control structures --- */
 
   @Override
   public void visit(IfExp node, int level) {
+    emitComment("-> if");
+
+    /* evaluate test condition */
     if (node.test != null) node.test.accept(this, level);
 
-    int jmpFalse = emitSkip(1);
+    /* skip for conditional jump to else */
+    emitComment("if: jump to else belongs here");
+    int savedJmp = emitSkip(1);
 
+    /* then part */
     if (node.thenpart != null) node.thenpart.accept(this, level);
 
+    /* skip for unconditional jump to end */
+    emitComment("if: jump to end belongs here");
+    int savedEnd = emitSkip(1);
+
+    /* backpatch conditional jump to here (else location) */
+    int elseLoc = emitSkip(0);
+    emitBackup(savedJmp);
+    emitRM_Abs("JEQ", AC, elseLoc, "if: jmp to else");
+    emitRestore();
+
+    /* else part (if any) */
     boolean hasElse = node.elsepart != null && !(node.elsepart instanceof NilExp);
-
     if (hasElse) {
-      int jmpEnd = emitSkip(1);
-
-      int elseLoc = emitSkip(0);
-      emitBackup(jmpFalse);
-      emitRM_Abs("JEQ", AC, elseLoc, "if: jmp to else");
-      emitRestore();
-
       node.elsepart.accept(this, level);
-
-      int endLoc = emitSkip(0);
-      emitBackup(jmpEnd);
-      emitRM_Abs("LDA", PC, endLoc, "if: jmp past else");
-      emitRestore();
-    } else {
-      int endLoc = emitSkip(0);
-      emitBackup(jmpFalse);
-      emitRM_Abs("JEQ", AC, endLoc, "if: jmp to end");
-      emitRestore();
     }
+
+    /* backpatch unconditional jump to here (end location) */
+    int endLoc = emitSkip(0);
+    emitBackup(savedEnd);
+    emitRM_Abs("LDA", PC, endLoc, "jmp to end");
+    emitRestore();
+
+    emitComment("<- if");
   }
 
   @Override
   public void visit(WhileExp node, int level) {
-    int topLoc = emitSkip(0);
-    emitComment("while: top");
+    emitComment("-> while");
+    emitComment("while: jump after body comes back here");
 
+    int topLoc = emitSkip(0);
+
+    /* evaluate test condition */
     if (node.test != null) node.test.accept(this, level);
 
-    int jmpEnd = emitSkip(1);
+    /* skip for conditional jump to end */
+    emitComment("while: jump to end belongs here");
+    int savedJmp = emitSkip(1);
 
+    /* body */
     if (node.body != null) node.body.accept(this, level);
-    emitRM_Abs("LDA", PC, topLoc, "while: jmp to top");
 
+    /* unconditional jump back to test */
+    emitRM_Abs("LDA", PC, topLoc, "while: absolute jmp to test");
+
+    /* backpatch conditional jump to here (end) */
     int endLoc = emitSkip(0);
-    emitBackup(jmpEnd);
+    emitBackup(savedJmp);
     emitRM_Abs("JEQ", AC, endLoc, "while: jmp to end");
     emitRestore();
+
+    emitComment("<- while");
   }
+
+  /* --- Return --- */
 
   @Override
   public void visit(ReturnExp node, int level) {
+    emitComment("-> return");
     if (node.exp != null && !(node.exp instanceof NilExp))
       node.exp.accept(this, level);
     emitRM("LD", PC, retFO, FP, "return to caller");
+    emitComment("<- return");
   }
+
+  /* --- Compound statements --- */
 
   @Override
   public void visit(CompoundExp node, int level) {
+    emitComment("-> compound statement");
     cgenEnterScope();
     if (node.decs != null) node.decs.accept(this, level);
     if (node.stmts != null) node.stmts.accept(this, level);
     cgenExitScope();
+    emitComment("<- compound statement");
   }
 }

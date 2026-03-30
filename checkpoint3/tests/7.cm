@@ -1,9 +1,13 @@
-/* 
+/*
    file name: 7.cm
-   authors: group 25 - muhammad ali, tameem mughal, richard milovanov
-   Expected errors: array grades assigned to scalar variable result, array grades passed as argument to doubleValue which expects an int.
-   Purpose: test semantic checks for array/scalar mismatches in expressions and function calls.
-   date: mar 22 2026
+   Authors: Group 25 - Muhammad Ali, Muhammad Tameem Mughal, Richard Milovanov
+   Expected errors:
+     1. array 'grades' passed to doubleValue which expects a scalar int
+     2. type mismatch: int = bool in assignment result = flag
+     3. while condition type is void (calling show)
+   Purpose: test semantic checks for array/scalar mismatch, assignment type
+            mismatch, and invalid while condition type.
+   date: mar 2026
 */
 
 int doubleValue(int x)
@@ -11,13 +15,26 @@ int doubleValue(int x)
   return x + x;
 }
 
+void show(int x)
+{
+  output(x);
+  return;
+}
+
 void main(void)
 {
   int grades[4];
   int result;
+  bool flag;
 
-  result = grades;
+  flag = true;
   result = doubleValue(grades);
+  result = flag;
+
+  while (show(result))
+  {
+    result = result - 1;
+  }
 
   output(result);
 }

@@ -1,9 +1,13 @@
-/* 
+/*
    file name: 5.cm
-   Expected Errors: undefined variable, redefined variable, bad function call argument count, bad function call argument type, nonarray used as array, array used without index, void function used in expression, return type mismatch.
-   Purpose: stress test semantic analysis and make sure the analyzer continues after lots of semantic issues.
-   authors: group 25 - muhammad ali, tameem mughal, richard milovanov
-   date: mar 11 2026
+   Authors: Group 25 - Muhammad Ali, Muhammad Tameem Mughal, Richard Milovanov
+   Expected errors:
+     1. undefined variable 'y' used in expression
+     2. wrong argument count calling sum(1) instead of sum(1,2)
+     3. variable 'a' declared as void
+   Purpose: test semantic analysis for undefined variables, wrong arg count,
+            and void variable declarations.
+   date: mar 2026
 */
 
 int sum(int a, int b)
@@ -11,31 +15,12 @@ int sum(int a, int b)
   return a + b;
 }
 
-void printer(int x)
-{
-  output(x);
-  return;
-}
-
-int badReturn(void)
-{
-  return;
-}
-
 void main(void)
 {
-  int a;
-  int a;
-  int b;
-  int arr[5];
-  void v;
+  int x;
+  void bad;
 
-  a = x + 1;
-  b = sum(1);
-  b = sum(arr, 2);
-  b = arr;
-  b = a[2];
-  b = printer(7);
-  arr[printer(1)] = 3;
-  output(sum(1, 2, 3));
+  x = y + 1;
+  x = sum(1);
+  output(x);
 }

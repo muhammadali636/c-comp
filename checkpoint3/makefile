@@ -1,6 +1,6 @@
 # File: makefile
 # CIS*4650 Checkpoint 3 — Makefile + Build sanity + Optional test target
-# Names: Muhammad Ali, Muhammad Tameem-Mughal, Richard Milasovanov
+# Names: Muhammad Ali, Muhammad Tameem Mughal, Richard Milovanov
 
 JAVAC = javac
 JFLEX_JAR = lib/jflex-1.9.1.jar
@@ -28,16 +28,23 @@ run: all
 	java -cp "$(CP)" CM $(FILE)
 
 test: all
-	java -cp "$(CP)" CM -a tests/1.cm
-	java -cp "$(CP)" CM -s tests/1.cm
-	java -cp "$(CP)" CM -c tests/1.cm
+	@echo "=== 1.cm (valid, -a -s -c) ==="
+	java -cp "$(CP)" CM -a -s -c tests/1.cm
+	@echo "=== 2.cm (valid, -c) ==="
 	java -cp "$(CP)" CM -c tests/2.cm
+	@echo "=== 3.cm (valid, -c) ==="
 	java -cp "$(CP)" CM -c tests/3.cm
-	java -cp "$(CP)" CM tests/4.cm
-	java -cp "$(CP)" CM tests/5.cm
-	java -cp "$(CP)" CM tests/6.cm
-	java -cp "$(CP)" CM tests/7.cm
-	java -cp "$(CP)" CM tests/8.cm
-	java -cp "$(CP)" CM tests/9.cm
-	java -cp "$(CP)" CM tests/0.cm
-	
+	@echo "=== 4.cm (semantic errors) ==="
+	-java -cp "$(CP)" CM tests/4.cm
+	@echo "=== 5.cm (semantic errors) ==="
+	-java -cp "$(CP)" CM tests/5.cm
+	@echo "=== 6.cm (semantic errors) ==="
+	-java -cp "$(CP)" CM tests/6.cm
+	@echo "=== 7.cm (semantic errors) ==="
+	-java -cp "$(CP)" CM tests/7.cm
+	@echo "=== 8.cm (valid, runtime error at execution) ==="
+	java -cp "$(CP)" CM -c tests/8.cm
+	@echo "=== 9.cm (many semantic errors) ==="
+	-java -cp "$(CP)" CM tests/9.cm
+	@echo "=== 0.cm (syntax + semantic errors) ==="
+	-java -cp "$(CP)" CM tests/0.cm

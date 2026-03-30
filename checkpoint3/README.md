@@ -125,38 +125,21 @@ Examples:
 ## TEST PLAN (Required 1.cm to 0.cm)
 All tests are in `tests/` and each file has a header comment describing expected errors or expected runtime behavior.
 
-**Valid code generation programs**
-- **1.cm** — valid program; should compile and generate runnable TM code  
-  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -a -s -c tests/1.cm`
+**Valid code generation programs (compile and run on TM simulator)**
+- **1.cm** — Easy: arithmetic, assignments, input/output in main
+- **2.cm** — Medium: recursive Fibonacci, while loops, if-else
+- **3.cm** — Hard: arrays, array parameters, nested blocks, global vars, boolean expressions
 
-- **2.cm** — valid program of different complexity; should compile and generate runnable TM code  
-  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -a -s -c tests/2.cm`
+**Controlled error programs (no more than 3 errors each)**
+- **4.cm** — Semantic: void function returns value, int function has empty return (2 errors)
+- **5.cm** — Semantic: undefined variable, wrong arg count, void variable (3 errors)
+- **6.cm** — Semantic: scalar used as array, void condition in if (2 errors)
+- **7.cm** — Semantic: array/scalar mismatch, type mismatch, void while condition (3 errors)
+- **8.cm** — Runtime: compiles successfully but halts on out-of-bounds array access (1 runtime error)
 
-- **3.cm** — valid program of different complexity; should compile and generate runnable TM code  
-  `java -cp ".:lib/java-cup-11b-runtime.jar" CM -a -s -c tests/3.cm`
-
-**Controlled syntax / semantic / runtime error programs**
-- **4.cm** — limited syntax / semantic / runtime errors  
-  `java -cp ".:lib/java-cup-11b-runtime.jar" CM tests/4.cm`
-
-- **5.cm** — limited syntax / semantic / runtime errors  
-  `java -cp ".:lib/java-cup-11b-runtime.jar" CM tests/5.cm`
-
-- **6.cm** — limited syntax / semantic / runtime errors  
-  `java -cp ".:lib/java-cup-11b-runtime.jar" CM tests/6.cm`
-
-- **7.cm** — limited syntax / semantic / runtime errors  
-  `java -cp ".:lib/java-cup-11b-runtime.jar" CM tests/7.cm`
-
-- **8.cm** — limited syntax / semantic / runtime errors  
-  `java -cp ".:lib/java-cup-11b-runtime.jar" CM tests/8.cm`
-
-**Stress tests**
-- **9.cm** — many mixed errors (stress test)  
-  `java -cp ".:lib/java-cup-11b-runtime.jar" CM tests/9.cm`
-
-- **0.cm** — many mixed errors (stress test)  
-  `java -cp ".:lib/java-cup-11b-runtime.jar" CM tests/0.cm`
+**Stress tests (unlimited errors)**
+- **9.cm** — Many semantic errors: undefined vars, redefinitions, void vars, wrong arg count/type, array misuse
+- **0.cm** — Mixed syntax + semantic errors: missing semicolons, malformed conditions, undefined functions
 
 ---
 

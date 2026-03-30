@@ -1,71 +1,30 @@
-/* 
-   file name: 1.cm
-   author: muhammad ali, tameem mughal, richard milo
-   Expected: no semantic errors.
-   Purpose: valid program to confirm semantic analysis works.
-   Errors: No errors in this file!!
-   Date: mar 11 2026
+/*
+   Test 1.cm - Simple: arithmetic, assignments, input/output in main
+   Authors: Group 25 - Muhammad Ali, Muhammad Tameem Mughal, Richard Milovanov
+   Complexity: Easy
+   Errors: None - compiles and runs correctly on the TM simulator.
+   Expected behavior: Reads two integers, outputs their sum, difference,
+                      product, and quotient.
 */
 
-int nums[10];
-
-int minPos(int a[], int lo, int hi) 
+void main(void)
 {
-  int i;
-  int best;
-  int idx;
+  int a;
+  int b;
+  int result;
 
-  idx = lo;
-  best = a[lo];
-  i = lo + 1;
+  a = input();
+  b = input();
 
-  while (i < hi) 
-  {
-    if (a[i] < best) 
-    {
-      best = a[i];
-      idx = i;
-    }
-    i = i + 1;
-  }
-  return idx;
-}
+  result = a + b;
+  output(result);
 
-void sort(int a[], int lo, int hi)
-{
-  int i;
-  int j;
-  int temp;
-  int m;
+  result = a - b;
+  output(result);
 
-  i = lo;
-  while (i < hi - 1)
-  {
-    m = minPos(a, i, hi);
-    temp = a[i];
-    a[i] = a[m];
-    a[m] = temp;
-    i = i + 1;
-  }
-}
+  result = a * b;
+  output(result);
 
-void main(void) 
-{
-  int t;
-
-  t = 0;
-  while (t < 10) 
-  {
-    nums[t] = input();
-    t = t + 1;
-  }
-
-  sort(nums, 0, 10);
-
-  t = 0;
-  while (t < 10) 
-  {
-    output(nums[t]);
-    t = t + 1;
-  }
+  result = a / b;
+  output(result);
 }
